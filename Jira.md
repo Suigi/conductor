@@ -1,5 +1,24 @@
 # What are we doing?
 
+## Tasks
+
+- [ ] Display the timer
+  - [ ] Local only, first
+  - [ ] Render time remaining
+  - [ ] Update every second
+  - [ ] Pause the timer
+  - [ ] Resume the timer
+  - [ ] Show "Timer ended"
+  - [ ] Share it with some server
+    - [ ] Share things that happen through some kind of events / commands?
+- [ ] Run mob commands
+  - [ ] Display mob command output
+- [ ] Explore what else we can do with Spring Shell
+  - [ ] What other views are there?
+  - [ ] Can we show scrolling text?
+
+## Mission?
+
 During the turn the timer will count down.
 ```text
 Turn timer: 03:15
