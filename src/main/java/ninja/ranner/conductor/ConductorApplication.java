@@ -36,6 +36,7 @@ public class ConductorApplication {
             boxView.setDrawFunction((screen, rectangle) -> {
                 var writer = screen.writerBuilder().build();
                 writer.text("Hello, Ensemblers!", rectangle, HorizontalAlign.CENTER, VerticalAlign.CENTER);
+                writer.text(" p: Push, f: Pull, q: Quit ", 2, rectangle.height() - 1);
                 return rectangle;
             });
             ui.configure(boxView);
