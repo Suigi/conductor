@@ -14,11 +14,11 @@ public class TestCommandList implements CommandList {
     public String EnterCommand() {
         Optional<String> first = commands.stream().findFirst();
         commands.removeFirst();
-        return first.orElse("fail");
+        return first.orElse("forgot to exit");
     }
 
     @Override
     public boolean hasNext() {
-        return commands.stream().findFirst().toString().equals("exit");
+        return commands.stream().findFirst().orElse("forgot to exit").equals("exit");
     }
 }
