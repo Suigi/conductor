@@ -11,7 +11,9 @@ import org.springframework.shell.component.message.ShellMessageBuilder;
 import org.springframework.shell.component.view.TerminalUIBuilder;
 import org.springframework.shell.component.view.control.BoxView;
 import org.springframework.shell.component.view.event.KeyEvent;
+import org.springframework.shell.component.view.screen.Screen;
 import org.springframework.shell.geom.HorizontalAlign;
+import org.springframework.shell.geom.Rectangle;
 import org.springframework.shell.geom.VerticalAlign;
 
 import java.io.IOError;
@@ -33,12 +35,7 @@ public class ConductorApplication {
 
             var boxView = new BoxView();
             boxView.setShowBorder(true);
-            boxView.setDrawFunction((screen, rectangle) -> {
-                var writer = screen.writerBuilder().build();
-                writer.text("Hello, Ensemblers!", rectangle, HorizontalAlign.CENTER, VerticalAlign.CENTER);
-                writer.text(" p: Push, f: Pull, q: Quit ", 2, rectangle.height() - 1);
-                return rectangle;
-            });
+            boxView.setDrawFunction((screen, rectangle) -> something(screen, rectangle));
             ui.configure(boxView);
             ui.setRoot(boxView, true);
 
@@ -56,6 +53,13 @@ public class ConductorApplication {
                 // ignore
             }
         };
+    }
+
+    public static Rectangle something(Screen screen, Rectangle rectangle) {
+        var writer = screen.writerBuilder().build();
+        writer.text("Hello, Ensemblers", rectangle, HorizontalAlign.CENTER, VerticalAlign.CENTER);
+        writer.text(" p: Push, f: Pull, q: Quit ", 2, rectangle.height() - 1);
+        return rectangle;
     }
 
 }

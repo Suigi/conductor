@@ -3,6 +3,8 @@
 ## Tasks
 
 - [ ] Display the timer
+  - [ ] Print a line every second, counting down
+  - [ ] When time is up, print "Turn is up"
   - [ ] Local only, first
   - [ ] Render time remaining
   - [ ] Update every second
@@ -34,7 +36,7 @@ Imagine you're Lada and the turn is up
 
 ```text
 Turn is up!
-Driver:    Lada (please push)
+Driver:    Lada (please save or rotate)
 Navigator: Tom
 
 (R)otate, (S)ave, Save with (m)essage
@@ -44,7 +46,7 @@ Rotate: will rotate driver and navigator (it also pushes any unpushed changes)
 
 ```text
 Next turn:
-Driver:    Daniel (please fetch)
+Driver:    Daniel (please load)
 Navigator: Lada
 
 (L)oad, (S)tart

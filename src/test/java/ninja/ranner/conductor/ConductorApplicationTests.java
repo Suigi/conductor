@@ -8,7 +8,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @Tag("Spring")
 @TestPropertySource(properties = {
-        "spring.shell.interactive.enabled=false"
+    "spring.shell.interactive.enabled=false"
 })
 class ConductorApplicationTests {
 
