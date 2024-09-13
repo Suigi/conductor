@@ -1,7 +1,10 @@
 package ninja.ranner.conductor.adapter.out.process;
 
+import java.util.Random;
+
 public class RealPrinter implements SystemPrinter {
-    public void Print(String message) {
+    public void print(String message) {
         System.out.println(message);
     }
+
 }

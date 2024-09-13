@@ -3,10 +3,11 @@ package ninja.ranner.conductor.adapter.out.process;
 import java.util.List;
 import java.util.Optional;
 
-public class TestCommandList implements CommandList {
+public class TestCommandList extends TerminalCommand {
     private final List<String> commands;
 
     public TestCommandList(List<String> commands) {
+        super(new SpyPrinter());
         this.commands = commands;
     }
 
@@ -20,5 +21,10 @@ public class TestCommandList implements CommandList {
     @Override
     public boolean hasNext() {
         return commands.stream().findFirst().orElse("forgot to exit").equals("exit");
+    }
+
+    @Override
+    public void run() {
+
     }
 }
