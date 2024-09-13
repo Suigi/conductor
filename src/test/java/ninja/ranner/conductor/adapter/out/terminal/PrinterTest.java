@@ -20,13 +20,24 @@ public class PrinterTest {
     }
 
     @Test
-    void withTimerOf1Second_prints1() throws Exception {
+    void withTimerOf1Second_prints_00_01() throws Exception {
         Printer printer = new Printer();
 
         String output = tapSystemOut(() ->
                 printer.print(new Timer(1)));
 
         assertThat(output)
-                .isEqualTo("Time left: 1 second\n");
+                .isEqualTo("Time left: 00:01\n");
+    }
+
+    @Test
+    void withTimerOf90Seconds_prints_01_30() throws Exception {
+        Printer printer = new Printer();
+
+        String output = tapSystemOut(() ->
+                printer.print(new Timer(90)));
+
+        assertThat(output)
+                .isEqualTo("Time left: 01:30\n");
     }
 }
