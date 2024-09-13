@@ -2,11 +2,21 @@ package ninja.ranner.conductor.adapter.out.process;
 
 public class TerminalUIWrapper {
 
-    public void run() {
-//        printstuff("Hello Ensemblers")
+    private final SystemPrinter systemPrinter;
+    private final CommandList commands;
+
+    public TerminalUIWrapper(SystemPrinter systemPrinter, CommandList commands) {
+        this.systemPrinter = systemPrinter;
+        this.commands = commands;
     }
 
-    public String retrieveMessage(int index) {
-        return "Hello, Ensemblers";
+    public void run() {
+        do {
+            systemPrinter.Print("Hello Ensemblers");
+
+            String firstCommand = commands.EnterCommand();
+            systemPrinter.Print("Entered Command: " + firstCommand);
+        } while (commands.hasNext());
     }
+
 }

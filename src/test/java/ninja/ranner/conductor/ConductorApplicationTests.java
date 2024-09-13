@@ -26,21 +26,21 @@ class ConductorApplicationTests {
     void contextLoads() {
     }
 
-    @Test
-    void pants() {
-        var terminalUIBuilder = new TerminalUI(new T)
-        var ui = terminalUIBuilder.build();
-        var boxView = new BoxView();
-        boxView.setShowBorder(true);
-        boxView.setDrawFunction((screen, rectangle) -> something(screen, rectangle));
-        ui.configure(boxView);
-        Screen screen = new DefaultScreen(10, 80);
-        Rectangle result = ConductorApplication.something(screen, new Rectangle(0, 0, 10, 80));
-        System.out.println();
-
-
-
-    }
+//    @Test
+//    void pants() {
+//        var terminalUIBuilder = new TerminalUI(new T)
+//        var ui = terminalUIBuilder.build();
+//        var boxView = new BoxView();
+//        boxView.setShowBorder(true);
+//        boxView.setDrawFunction((screen, rectangle) -> something(screen, rectangle));
+//        ui.configure(boxView);
+//        Screen screen = new DefaultScreen(10, 80);
+//        Rectangle result = ConductorApplication.something(screen, new Rectangle(0, 0, 10, 80));
+//        System.out.println();
+//
+//
+//
+//    }
 //    @Test
 //    void AnotherTest() {
 //
