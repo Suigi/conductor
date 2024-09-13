@@ -34,7 +34,7 @@ Imagine you're Lada and the turn is up
 
 ```text
 Turn is up!
-Driver:    Lada (please push)
+Driver:    Lada (please save or rotate)
 Navigator: Tom
 
 (R)otate, (S)ave, Save with (m)essage
@@ -44,7 +44,7 @@ Rotate: will rotate driver and navigator (it also pushes any unpushed changes)
 
 ```text
 Next turn:
-Driver:    Daniel (please fetch)
+Driver:    Daniel (please load)
 Navigator: Lada
 
 (L)oad, (S)tart
