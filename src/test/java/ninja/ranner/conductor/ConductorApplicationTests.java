@@ -16,4 +16,8 @@ class ConductorApplicationTests {
     void contextLoads() {
     }
 
+    @Test
+    void pants() {
+        // start here
+    }
 }
