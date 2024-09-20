@@ -2,9 +2,10 @@
 
 ## Tasks
 
-- [ ] Display the timer
-  - [ ] Print a line every second, counting down
-  - [ ] When time is up, print "Turn is up"
+- [.] Display the timer
+  - [.] Create an out adapter that takes the timer and shows it on the screen
+  - [.] Print a line every second, counting down
+  - [.] When time is up, print "Turn is up"
   - [ ] Local only, first
   - [ ] Render time remaining
   - [ ] Update every second
@@ -13,6 +14,7 @@
   - [ ] Show "Timer ended"
   - [ ] Share it with some server
     - [ ] Share things that happen through some kind of events / commands?
+- [ ] Figure out test for where to call `draw` / wiring up the application
 - [ ] Run mob commands
   - [ ] Display mob command output
 - [ ] Explore what else we can do with Spring Shell

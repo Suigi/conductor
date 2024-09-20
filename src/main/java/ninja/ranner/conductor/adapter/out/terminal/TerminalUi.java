@@ -140,7 +140,7 @@ public class TerminalUi {
         }
     }
 
-    public interface ATerminal {
+    private interface ATerminal {
         void println(String line);
 
         Size getSize();
