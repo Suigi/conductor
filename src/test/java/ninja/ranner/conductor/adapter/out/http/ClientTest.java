@@ -26,7 +26,7 @@ public class ClientTest {
                     .method("GET", HttpRequest.BodyPublishers.noBody())
                     .uri((server.url("/hello").uri()))
                     .build();
-            MyHttpClient httpClient = MyHttpClient.create();
+            HttpClient httpClient = HttpClient.create();
 
             httpClient.sendRequest(request);
 
@@ -43,9 +43,9 @@ public class ClientTest {
                     .method("GET", HttpRequest.BodyPublishers.noBody())
                     .uri((server.url("/hello").uri()))
                     .build();
-            MyHttpClient httpClient = MyHttpClient.create();
+            HttpClient httpClient = HttpClient.create();
 
-            MyHttpClient.Response<String> response = httpClient.sendRequest(request);
+            HttpClient.Response<String> response = httpClient.sendRequest(request);
 
             assertThat(response.body())
                     .isEqualTo("my response body");
@@ -58,7 +58,7 @@ public class ClientTest {
 
         @Test
         void doesNotSendHttpRequest() throws Exception {
-            MyHttpClient httpClient = MyHttpClient.createNull();
+            HttpClient httpClient = HttpClient.createNull();
 
             httpClient.sendRequest(HttpRequest.newBuilder()
                     .GET()
@@ -71,8 +71,8 @@ public class ClientTest {
 
         @Test
         void returnsConfiguredResponse() throws Exception {
-            MyHttpClient httpClient = MyHttpClient.createNull(c -> c
-                    .respondingWith(new MyHttpClient.Response<>("my configured response body")));
+            HttpClient httpClient = HttpClient.createNull(c -> c
+                    .respondingWith(new HttpClient.Response<>("my configured response body")));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
@@ -86,7 +86,7 @@ public class ClientTest {
 
         @Test
         void whenNoResponseConfigured_returnsDefaultResponse() throws Exception {
-            MyHttpClient httpClient = MyHttpClient.createNull();
+            HttpClient httpClient = HttpClient.createNull();
 
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()

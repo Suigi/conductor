@@ -3,7 +3,6 @@ package ninja.ranner.conductor.adapter.out.http;
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -11,24 +10,24 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class MyHttpClient {
+public class HttpClient {
     private final AnHttpClient httpClient;
 
-    private MyHttpClient(AnHttpClient httpClient) {
+    private HttpClient(AnHttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
-    public static MyHttpClient create() {
-        return new MyHttpClient(new WrappedHttpClient(HttpClient.newHttpClient()));
+    public static HttpClient create() {
+        return new HttpClient(new WrappedHttpClient(java.net.http.HttpClient.newHttpClient()));
     }
 
-    public static MyHttpClient createNull() {
+    public static HttpClient createNull() {
         return createNull(Function.identity());
     }
 
-    public static MyHttpClient createNull(Function<Config, Config> configure) {
+    public static HttpClient createNull(Function<Config, Config> configure) {
         Config config = configure.apply(new Config());
-        return new MyHttpClient(new StubHttpClient(config.configuredResponse));
+        return new HttpClient(new StubHttpClient(config.configuredResponse));
     }
 
     public Response<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
@@ -62,7 +61,7 @@ public class MyHttpClient {
         <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> inputStreamBodyHandler) throws IOException, InterruptedException;
     }
 
-    record WrappedHttpClient(HttpClient httpClient) implements AnHttpClient {
+    record WrappedHttpClient(java.net.http.HttpClient httpClient) implements AnHttpClient {
         @Override
         public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler) throws IOException, InterruptedException {
             return httpClient.send(request, bodyHandler);
@@ -110,8 +109,8 @@ public class MyHttpClient {
                 }
 
                 @Override
-                public HttpClient.Version version() {
-                    return HttpClient.Version.HTTP_1_1;
+                public java.net.http.HttpClient.Version version() {
+                    return java.net.http.HttpClient.Version.HTTP_1_1;
                 }
             };
         }
