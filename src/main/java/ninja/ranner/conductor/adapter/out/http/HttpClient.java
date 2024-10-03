@@ -32,11 +32,11 @@ public class HttpClient {
 
     public Response<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
         HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return new Response<>(httpResponse.body());
+        return Response.ok(httpResponse.body());
     }
 
     public static class Config {
-        private Response<String> configuredResponse = new Response<>("DEFAULT RESPONSE BODY");
+        private Response<String> configuredResponse = Response.ok("DEFAULT RESPONSE BODY");
 
         public Config respondingWith(Response<String> configuredResponse) {
             this.configuredResponse = configuredResponse;
@@ -44,18 +44,11 @@ public class HttpClient {
         }
     }
 
-    public static class Response<T> {
-        private final T body;
-
-        public Response(T body) {
-            this.body = body;
-        }
-
-        public T body() {
-            return body;
+    public record Response<T>(T body) {
+        public static <T> Response<T> ok(T body) {
+            return new Response<>(body);
         }
     }
-
 
     interface AnHttpClient {
         <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> inputStreamBodyHandler) throws IOException, InterruptedException;

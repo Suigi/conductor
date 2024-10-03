@@ -70,9 +70,23 @@ public class ClientTest {
         }
 
         @Test
-        void returnsConfiguredResponse() throws Exception {
+        void whenNoResponseConfigured_returnsDefaultResponse() throws Exception {
+            HttpClient httpClient = HttpClient.createNull();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(server.url("/").uri())
+                    .build();
+            var response = httpClient.sendRequest(request);
+
+            assertThat(response.body())
+                    .isEqualTo("DEFAULT RESPONSE BODY");
+        }
+
+        @Test
+        void returnsConfiguredResponseBody() throws Exception {
             HttpClient httpClient = HttpClient.createNull(c -> c
-                    .respondingWith(new HttpClient.Response<>("my configured response body")));
+                    .respondingWith(HttpClient.Response.ok("my configured response body")));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
@@ -85,17 +99,8 @@ public class ClientTest {
         }
 
         @Test
-        void whenNoResponseConfigured_returnsDefaultResponse() throws Exception {
-            HttpClient httpClient = HttpClient.createNull();
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(server.url("/").uri())
-                    .build();
-            var response = httpClient.sendRequest(request);
-
-            assertThat(response.body())
-                    .isEqualTo("DEFAULT RESPONSE BODY");
+        @Disabled("test list")
+        void returnsConfiguredResponseStatusAndHeaders() {
         }
 
         @Test
