@@ -16,7 +16,10 @@ public class OutputTracker<T> {
     }
 
     public T single() {
-        if (entries.size() != 1) {
+        if (entries.isEmpty()) {
+            throw new IllegalStateException("Expected output to have a single element, but output was empty");
+        }
+        if (entries.size() > 1) {
             throw new IllegalStateException("Expected output to have a single element, but found: " + entries.size());
         }
         return entries.getFirst();
