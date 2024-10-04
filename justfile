@@ -4,4 +4,4 @@ build:
 run:
     java -jar ./target/conductor-0.0.1-SNAPSHOT.jar
 
-full: build run
+all: build run

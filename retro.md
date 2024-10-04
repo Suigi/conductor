@@ -1,3 +1,19 @@
+04.10.2024
+----------
+
+TIL:
+
+* Remembering Java Things (TM)
+  * AutoClosable
+  * Executor
+  * awaitility
+* Threads are not complicated (who knew?)
+* Diagrams helped communicate what we're doing
+* Enjoyed the nullable part
+
+Next Time:
+
+
 20.09.2024
 ----------
 

@@ -3,15 +3,11 @@
 ## Tasks
 
 - [.] Display the timer
-  - [.] Create an out adapter that takes the timer and shows it on the screen
-  - [.] Print a line every second, counting down
-  - [.] When time is up, print "Turn is up"
-  - [ ] Local only, first
-  - [ ] Render time remaining
-  - [ ] Update every second
-  - [ ] Pause the timer
+  - [.] Pause the timer
+    - [.] Make the `Scheduler` stop running its `command`
   - [ ] Resume the timer
-  - [ ] Show "Timer ended"
+  - [ ] Show timer state (running/paused/time remaining) in UI
+  - [ ] Render time remaining (prettily)
   - [ ] Share it with some server
     - [ ] Share things that happen through some kind of events / commands?
 - [ ] Figure out test for where to call `draw` / wiring up the application
@@ -20,6 +16,13 @@
 - [ ] Explore what else we can do with Spring Shell
   - [ ] What other views are there?
   - [ ] Can we show scrolling text?
+
+## Done
+
+- [X] Create an out adapter that takes the timer and shows it on the screen
+- [X] Create an IN adapter for receiving scheduled callbacks
+- [X] When time is up, print "Timer's up!"
+- [X] Update every second
 
 ## Mission?
 

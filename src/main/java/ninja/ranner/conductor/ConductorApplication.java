@@ -21,7 +21,7 @@ public class ConductorApplication {
             renderAppState(tui);
         });
         renderAppState(tui);
-        try (AutoCloseable ignored = new Scheduler(TimeUnit.SECONDS).oncePerSecond(() -> {
+        try (AutoCloseable ignored = Scheduler.create(TimeUnit.SECONDS).start(() -> {
             timer.tick();
             renderAppState(tui);
         })) {
