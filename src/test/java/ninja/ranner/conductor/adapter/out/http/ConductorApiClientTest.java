@@ -1,5 +1,6 @@
 package ninja.ranner.conductor.adapter.out.http;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -12,9 +13,9 @@ public class ConductorApiClientTest {
     void createTimerSendsPostRequest() throws Exception {
         HttpClient httpClient = HttpClient.createNull();
         var trackedRequests = httpClient.trackRequests();
-        ConductorApiClient conductorApiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
+        ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        conductorApiClient.createTimer("TIMER_NAME", 100);
+        apiClient.createTimer("TIMER_NAME", 100);
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
@@ -28,5 +29,22 @@ public class ConductorApiClientTest {
                                 """
                 ));
     }
+
+    @Nested
+    class RequestTracking {
+
+        @Test
+        void tracksCreateTimerCommand() throws Exception {
+            ConductorApiClient apiClient = ConductorApiClient.createNull();
+            var trackedCommands = apiClient.trackCommands();
+
+            apiClient.createTimer("my_timer", 12);
+
+            assertThat(trackedCommands.single())
+                    .isEqualTo(new ConductorApiClient.Command.CreateTimer("my_timer", 12));
+        }
+
+    }
+
 
 }
