@@ -6,10 +6,20 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConductorApiClientTest {
+
+    private static final HttpClient.Response<String> VALID_TIMER_RESPONSE = new HttpClient.Response<>(200, """
+            {
+              "name": "irrelevant_timer",
+              "status": "Waiting",
+              "remainingSeconds": 999,
+              "participants": []
+            }
+            """);
 
     @Test
     void createTimerSendsPostRequest() throws Exception {
@@ -102,13 +112,48 @@ public class ConductorApiClientTest {
     }
 
     @Test
-    @Disabled("test list")
     void fetchTimerSendsGetRequest() throws Exception {
+        HttpClient httpClient = HttpClient.createNull(c -> c.respondingWith(VALID_TIMER_RESPONSE));
+        var trackedRequests = httpClient.trackRequests();
+        ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
+
+        apiClient.fetchTimer("TIMER_NAME");
+
+        assertThat(trackedRequests.single())
+                .isEqualTo(new HttpClient.Request(
+                        "GET",
+                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME"),
+                        ""
+                ));
     }
 
     @Test
-    @Disabled("test list")
     void fetchTimerReturnsTimer() throws Exception {
+        HttpClient httpClient = HttpClient.createNull(c -> c
+                .respondingWith(new HttpClient.Response<>(200, """
+                        {
+                          "name": "my_timer",
+                          "status": "Waiting",
+                          "remainingSeconds": 32,
+                          "participants": [
+                            "Joe",
+                            "Abby"
+                          ]
+                        }
+                        """)));
+        ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
+
+        Optional<ConductorApiClient.Timer> timer = apiClient.fetchTimer("TIMER_NAME");
+
+        assertThat(timer)
+                .isPresent();
+        assertThat(timer)
+                .contains(new ConductorApiClient.Timer(
+                        "my_timer",
+                        "Waiting",
+                        32,
+                        List.of("Joe", "Abby")
+                ));
     }
 
     @Test

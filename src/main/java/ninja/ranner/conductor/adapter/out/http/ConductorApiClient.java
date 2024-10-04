@@ -1,5 +1,6 @@
 package ninja.ranner.conductor.adapter.out.http;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import ninja.ranner.conductor.adapter.OutputListener;
 import ninja.ranner.conductor.adapter.OutputTracker;
 
@@ -32,6 +33,15 @@ public class ConductorApiClient {
                 durationSeconds));
     }
 
+    public Optional<Timer> fetchTimer(String timerName) throws IOException, InterruptedException {
+        HttpClient.Response<String> response = send(new Command.FetchTimer(timerName));
+
+        JsonMapper jsonMapper = JsonMapper.builder().build();
+        Timer timer = jsonMapper.readValue(response.body(), Timer.class);
+
+        return Optional.of(timer);
+    }
+
     public void startTimer(String timerName) throws IOException, InterruptedException {
         send(new Command.StartTimer(timerName));
     }
@@ -44,7 +54,7 @@ public class ConductorApiClient {
         send(new Command.UpdateParticipants(timerName, participants));
     }
 
-    private void send(Command command) throws IOException, InterruptedException {
+    private HttpClient.Response<String> send(Command command) throws IOException, InterruptedException {
         commandListener.emit(command);
         HttpRequest request = HttpRequest.newBuilder()
                 .method(
@@ -55,15 +65,15 @@ public class ConductorApiClient {
                 )
                 .uri(URI.create("%s%s".formatted(baseUrl, command.path())))
                 .build();
-        httpClient.sendRequest(request);
+        return httpClient.sendRequest(request);
     }
 
     public OutputTracker<Command> trackCommands() {
         return commandListener.track();
     }
 
-    public sealed interface Command permits
-            Command.CreateTimer,
+    public sealed interface Command permits Command.CreateTimer,
+            Command.FetchTimer,
             Command.PauseTimer,
             Command.StartTimer,
             Command.UpdateParticipants {
@@ -153,6 +163,32 @@ public class ConductorApiClient {
                         .collect(Collectors.joining(", "))));
             }
         }
+
+        record FetchTimer(String timerName) implements Command {
+
+            @Override
+            public String method() {
+                return "GET";
+            }
+
+            @Override
+            public String path() {
+                return "/timers/" + timerName;
+            }
+
+            @Override
+            public Optional<String> body() {
+                return Optional.empty();
+            }
+        }
+    }
+
+    public record Timer(
+            String name,
+            String status,
+            int remainingSeconds,
+            List<String> participants
+    ) {
     }
 
 }
