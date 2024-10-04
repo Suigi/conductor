@@ -32,7 +32,10 @@ public class HttpClient {
 
     public Response<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
         HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return Response.ok(httpResponse.body());
+        return new Response<>(
+                httpResponse.statusCode(),
+                httpResponse.body()
+        );
     }
 
     public static class Config {
@@ -44,9 +47,13 @@ public class HttpClient {
         }
     }
 
-    public record Response<T>(T body) {
+    public record Response<T>(int statusCode, T body) {
         public static <T> Response<T> ok(T body) {
-            return new Response<>(body);
+            return new Response<>(200, body);
+        }
+
+        public static <T> Response<T> status(int statusCode, Class<T> bodyType) {
+            return new Response<>(statusCode, null);
         }
     }
 
@@ -67,7 +74,7 @@ public class HttpClient {
             return new HttpResponse<>() {
                 @Override
                 public int statusCode() {
-                    return 200;
+                    return configuredResponse.statusCode();
                 }
 
                 @Override

@@ -99,8 +99,23 @@ public class ClientTest {
         }
 
         @Test
+        void returnsConfiguredResponseStatus() throws Exception {
+            HttpClient httpClient = HttpClient.createNull(c -> c
+                    .respondingWith(HttpClient.Response.status(404, String.class)));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(server.url("/").uri())
+                    .build();
+            var response = httpClient.sendRequest(request);
+
+            assertThat(response.statusCode())
+                    .isEqualTo(404);
+        }
+
+        @Test
         @Disabled("test list")
-        void returnsConfiguredResponseStatusAndHeaders() {
+        void returnsConfiguredResponseHeaders() {
         }
 
         @Test
