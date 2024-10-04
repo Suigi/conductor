@@ -1,5 +1,6 @@
 package ninja.ranner.conductor.adapter.out.http;
 
+import ninja.ranner.conductor.adapter.OutputTracker;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -11,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ClientTest {
+public class HttpClientTest {
 
     private MockWebServer server;
 
@@ -23,8 +24,8 @@ public class ClientTest {
             server.enqueue(new MockResponse());
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .method("GET", HttpRequest.BodyPublishers.noBody())
-                    .uri((server.url("/hello").uri()))
+                    .GET()
+                    .uri((server.url("/get-path").uri()))
                     .build();
             HttpClient httpClient = HttpClient.create();
 
@@ -33,6 +34,35 @@ public class ClientTest {
             RecordedRequest recordedRequest = server.takeRequest(1, TimeUnit.SECONDS);
             assertThat(recordedRequest)
                     .isNotNull();
+            assertThat(recordedRequest.getMethod())
+                    .isEqualTo("GET");
+            assertThat(recordedRequest.getBody().readUtf8())
+                    .isEmpty();
+            assertThat(recordedRequest.getPath())
+                    .isEqualTo("/get-path");
+        }
+
+        @Test
+        void clientMakesPostRequest() throws Exception {
+            server.enqueue(new MockResponse());
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofString("my request body"))
+                    .uri((server.url("/post-request").uri()))
+                    .build();
+            HttpClient httpClient = HttpClient.create();
+
+            httpClient.sendRequest(request);
+
+            RecordedRequest recordedRequest = server.takeRequest(1, TimeUnit.SECONDS);
+            assertThat(recordedRequest)
+                    .isNotNull();
+            assertThat(recordedRequest.getMethod())
+                    .isEqualTo("POST");
+            assertThat(recordedRequest.getBody().readUtf8())
+                    .isEqualTo("my request body");
+            assertThat(recordedRequest.getPath())
+                    .isEqualTo("/post-request");
         }
 
         @Test
@@ -119,8 +149,29 @@ public class ClientTest {
         }
 
         @Test
-        @Disabled("test list")
-        void tracksSentRequests() {
+        void tracksSentRequests() throws Exception {
+            HttpClient httpClient = HttpClient.createNull();
+            OutputTracker<HttpClient.Request> trackedRequests = httpClient.trackRequests();
+
+            httpClient.sendRequest(HttpRequest.newBuilder()
+                    .GET()
+                    .uri(server.url("/get-path").uri())
+                    .build());
+            httpClient.sendRequest(HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofString("my request body"))
+                    .uri(server.url("/post-path").uri())
+                    .build());
+
+            assertThat(trackedRequests.all())
+                    .containsExactly(
+                            new HttpClient.Request(
+                                    "GET",
+                                    ""
+                            ),
+                            new HttpClient.Request(
+                                    "POST",
+                                    "my request body"
+                            ));
         }
 
     }

@@ -1,17 +1,24 @@
 package ninja.ranner.conductor.adapter.out.http;
 
+import ninja.ranner.conductor.adapter.OutputListener;
+import ninja.ranner.conductor.adapter.OutputTracker;
+
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 public class HttpClient {
     private final AnHttpClient httpClient;
+    private final OutputListener<Request> requestListener = new OutputListener<>();
 
     private HttpClient(AnHttpClient httpClient) {
         this.httpClient = httpClient;
@@ -31,11 +38,48 @@ public class HttpClient {
     }
 
     public Response<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
+        StringSubscriber requestBodySubscriber = new StringSubscriber();
+        request.bodyPublisher().ifPresent(p -> p.subscribe(requestBodySubscriber));
+
         HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        requestListener.emit(new Request(
+                request.method(),
+                requestBodySubscriber.body()));
         return new Response<>(
                 httpResponse.statusCode(),
                 httpResponse.body()
         );
+    }
+
+    private static class StringSubscriber implements Flow.Subscriber<ByteBuffer> {
+        private final StringBuilder requestBody = new StringBuilder();
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            subscription.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(ByteBuffer item) {
+            requestBody.append(StandardCharsets.UTF_8.decode(item));
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+        }
+
+        @Override
+        public void onComplete() {
+        }
+
+        public String body() {
+            return requestBody.toString();
+        }
+    }
+
+    public OutputTracker<Request> trackRequests() {
+        return requestListener.track();
     }
 
     public static class Config {
@@ -45,6 +89,9 @@ public class HttpClient {
             this.configuredResponse = configuredResponse;
             return this;
         }
+    }
+
+    public record Request(String method, String body) {
     }
 
     public record Response<T>(int statusCode, T body) {
