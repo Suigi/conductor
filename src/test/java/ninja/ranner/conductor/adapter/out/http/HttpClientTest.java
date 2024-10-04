@@ -166,10 +166,12 @@ public class HttpClientTest {
                     .containsExactly(
                             new HttpClient.Request(
                                     "GET",
+                                    server.url("/get-path").uri(),
                                     ""
                             ),
                             new HttpClient.Request(
                                     "POST",
+                                    server.url("/post-path").uri(),
                                     "my request body"
                             ));
         }

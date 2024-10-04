@@ -45,6 +45,7 @@ public class HttpClient {
 
         requestListener.emit(new Request(
                 request.method(),
+                request.uri(),
                 requestBodySubscriber.body()));
         return new Response<>(
                 httpResponse.statusCode(),
@@ -91,7 +92,7 @@ public class HttpClient {
         }
     }
 
-    public record Request(String method, String body) {
+    public record Request(String method, URI uri, String body) {
     }
 
     public record Response<T>(int statusCode, T body) {
