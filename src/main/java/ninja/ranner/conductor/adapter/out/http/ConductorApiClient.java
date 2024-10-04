@@ -25,27 +25,23 @@ public class ConductorApiClient {
     }
 
     public void createTimer(String timerName, int durationSeconds) throws IOException, InterruptedException {
-        Command command = new Command.CreateTimer(
+        send(new Command.CreateTimer(
                 timerName,
-                durationSeconds);
-        commandListener.emit(command);
-        httpClient.sendRequest(requestFor(command));
+                durationSeconds));
     }
 
-    private HttpRequest requestFor(Command command) {
-        return HttpRequest.newBuilder()
+    private void send(Command command) throws IOException, InterruptedException {
+        commandListener.emit(command);
+        HttpRequest request = HttpRequest.newBuilder()
                 .method(
                         command.method(),
                         command.body()
                                 .map(HttpRequest.BodyPublishers::ofString)
                                 .orElse(HttpRequest.BodyPublishers.noBody())
                 )
-                .uri(uriTo(command.path()))
+                .uri(URI.create("%s%s".formatted(baseUrl, command.path())))
                 .build();
-    }
-
-    private URI uriTo(String path) {
-        return URI.create("%s%s".formatted(baseUrl, path));
+        httpClient.sendRequest(request);
     }
 
     public OutputTracker<Command> trackCommands() {
