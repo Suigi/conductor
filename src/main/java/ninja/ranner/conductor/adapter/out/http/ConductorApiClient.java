@@ -36,6 +36,10 @@ public class ConductorApiClient {
     public Optional<Timer> fetchTimer(String timerName) throws IOException, InterruptedException {
         HttpClient.Response<String> response = send(new Command.FetchTimer(timerName));
 
+        if (response.statusCode() == 404) {
+            return Optional.empty();
+        }
+
         JsonMapper jsonMapper = JsonMapper.builder().build();
         Timer timer = jsonMapper.readValue(response.body(), Timer.class);
 

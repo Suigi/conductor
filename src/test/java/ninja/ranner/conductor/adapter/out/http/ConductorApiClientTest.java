@@ -157,10 +157,16 @@ public class ConductorApiClientTest {
     }
 
     @Test
-    @Disabled("test list")
     void fetchTimerWithUnknownTimerNameReturnsEmptyOptional() throws Exception {
-    }
+        HttpClient httpClient = HttpClient.createNull(c -> c
+                .respondingWith(new HttpClient.Response<>(404, "")));
+        ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
+        Optional<ConductorApiClient.Timer> timer = apiClient.fetchTimer("TIMER_NAME");
+
+        assertThat(timer)
+                .isEmpty();
+    }
 
     @Nested
     class RequestTracking {
