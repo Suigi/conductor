@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Domain" pattern="src:ninja.ranner.conductor.domain..*" />
+</component>

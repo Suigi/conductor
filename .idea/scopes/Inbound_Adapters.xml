@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Inbound Adapters" pattern="src:ninja.ranner.conductor.adapter.in..*" />
+</component>
