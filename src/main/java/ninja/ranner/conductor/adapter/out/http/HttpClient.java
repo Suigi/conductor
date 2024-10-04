@@ -28,18 +28,8 @@ public class HttpClient {
         return new HttpClient(new WrappedHttpClient(java.net.http.HttpClient.newHttpClient()));
     }
 
-    public static HttpClient createNull() {
-        return createNull(Function.identity());
-    }
-
-    public static HttpClient createNull(Function<Config, Config> configure) {
-        Config config = configure.apply(new Config());
-        return new HttpClient(new StubHttpClient(config.configuredResponse));
-    }
-
     public Response<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
-        StringSubscriber requestBodySubscriber = new StringSubscriber();
-        request.bodyPublisher().ifPresent(p -> p.subscribe(requestBodySubscriber));
+        StringSubscriber requestBodySubscriber = new StringSubscriber(request);
 
         HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -53,8 +43,31 @@ public class HttpClient {
         );
     }
 
+    public OutputTracker<Request> trackRequests() {
+        return requestListener.track();
+    }
+
+    public record Request(String method, URI uri, String body) {
+    }
+
+    public record Response<T>(int statusCode, T body) {
+
+        public static <T> Response<T> ok(T body) {
+            return new Response<>(200, body);
+        }
+
+        public static <T> Response<T> status(int statusCode, Class<T> bodyType) {
+            return new Response<>(statusCode, null);
+        }
+
+    }
+
     private static class StringSubscriber implements Flow.Subscriber<ByteBuffer> {
         private final StringBuilder requestBody = new StringBuilder();
+
+        public StringSubscriber(HttpRequest request) {
+            request.bodyPublisher().ifPresent(p -> p.subscribe(this));
+        }
 
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
@@ -79,8 +92,15 @@ public class HttpClient {
         }
     }
 
-    public OutputTracker<Request> trackRequests() {
-        return requestListener.track();
+    /// ~~~ Embedded Stub below ~~~
+
+    public static HttpClient createNull() {
+        return createNull(Function.identity());
+    }
+
+    public static HttpClient createNull(Function<Config, Config> configure) {
+        Config config = configure.apply(new Config());
+        return new HttpClient(new StubHttpClient(config.configuredResponse));
     }
 
     public static class Config {
@@ -89,19 +109,6 @@ public class HttpClient {
         public Config respondingWith(Response<String> configuredResponse) {
             this.configuredResponse = configuredResponse;
             return this;
-        }
-    }
-
-    public record Request(String method, URI uri, String body) {
-    }
-
-    public record Response<T>(int statusCode, T body) {
-        public static <T> Response<T> ok(T body) {
-            return new Response<>(200, body);
-        }
-
-        public static <T> Response<T> status(int statusCode, Class<T> bodyType) {
-            return new Response<>(statusCode, null);
         }
     }
 
