@@ -1,0 +1,26 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+footbox off
+skinparam ParticipantPadding 10
+skinparam BoxPadding 20
+
+box InAdapters #F1E6FF
+participant Scheduler as scheduler
+box Application #FFEFE6
+participant "main()" as main
+box Domain #F7F0D2
+participant Timer as timer
+box OutAdapters #DAE4F7
+participant "API" as api
+participant "Terminal UI" as tui
+
+scheduler --> scheduler: 1 second passed
+scheduler -> main: per-second-callback()
+main -> api: fetchTimer()
+api -> timer: new()
+api <-- timer: <timer>
+main <-- api: <timer>
+main -> tui: render app state(timer)
+
+@enduml

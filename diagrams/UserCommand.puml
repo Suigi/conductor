@@ -1,0 +1,22 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+footbox off
+skinparam ParticipantPadding 10
+skinparam BoxPadding 20
+
+box InAdapters #F1E6FF
+participant LineReader as reader
+box Application #FFEFE6
+participant "main()" as main
+box Domain #F7F0D2
+participant "???" as domain
+box OutAdapters #DAE4F7
+participant "Terminal UI" as tui
+
+reader -> main: command-callback()
+main -> domain: handle command
+main <-- domain:
+main -> tui: render app state(timer, last_command)
+
+@enduml
