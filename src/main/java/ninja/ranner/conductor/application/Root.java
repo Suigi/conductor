@@ -4,10 +4,8 @@ import ninja.ranner.conductor.adapter.in.clock.Scheduler;
 import ninja.ranner.conductor.adapter.out.http.ConductorApiClient;
 import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
 import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
-import ninja.ranner.conductor.domain.RemoteTimer;
 
 import java.io.IOException;
-import java.util.Optional;
 
 public class Root {
     private final TerminalUi terminalUi;
@@ -34,10 +32,11 @@ public class Root {
 
     private void render() {
         try {
-            Optional<RemoteTimer> timer = apiClient.fetchTimer(timerName);
-            timer.ifPresent(t -> {
-                terminalUi.update(new TimerTransformer(null).transform(t));
-            });
+            TimerTransformer transformer = new TimerTransformer(null);
+            apiClient
+                    .fetchTimer(timerName)
+                    .map(transformer::transform)
+                    .ifPresent(terminalUi::update);
         } catch (IOException | InterruptedException e) {
             // ignore
         }
