@@ -1,15 +1,15 @@
 package ninja.ranner.conductor.adapter.out.terminal;
 
-import org.jline.reader.EndOfFileException;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.UserInterruptException;
+import org.jline.reader.*;
+import org.jline.reader.impl.completer.NullCompleter;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp;
 
 import java.io.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -20,13 +20,16 @@ public class TerminalUi {
     private Consumer<String> commandHandler = ignored -> {
     };
 
-    private TerminalUi(ATerminal terminal) {
+    private TerminalUi(ATerminal terminal, Completer completer) {
         this.terminal = terminal;
-        reader = this.terminal.createReader();
+        reader = this.terminal.createReader(completer);
     }
 
-    public static TerminalUi create() throws IOException {
-        return new TerminalUi(new WrappedTerminal(TerminalBuilder.terminal()));
+    public static TerminalUi create(List<String> completionCandidates) throws IOException {
+        return new TerminalUi(new WrappedTerminal(
+                TerminalBuilder.terminal()),
+                new StringsCompleter(completionCandidates)
+        );
     }
 
     public void run() {
@@ -43,7 +46,7 @@ public class TerminalUi {
         while (!line.equals("quit") && !line.equals("q")) {
             render();
             try {
-                line = reader.readLine("> ");
+                line = reader.readLine("> ").trim();
             } catch (UserInterruptException | EndOfFileException e) {
                 line = "quit";
             }
@@ -130,7 +133,8 @@ public class TerminalUi {
                 fixture = new Fixture(
                         new TerminalUi(new StubTerminal(
                                 in,
-                                this.outputStream)),
+                                this.outputStream),
+                                NullCompleter.INSTANCE),
                         new Controls(out)
                 );
             } catch (IOException e) {
@@ -149,7 +153,7 @@ public class TerminalUi {
 
         void puts(InfoCmp.Capability capability);
 
-        LineReader createReader();
+        LineReader createReader(Completer completer);
     }
 
     public static class WrappedTerminal implements ATerminal {
@@ -175,8 +179,11 @@ public class TerminalUi {
         }
 
         @Override
-        public LineReader createReader() {
-            return LineReaderBuilder.builder().terminal(this.terminal).build();
+        public LineReader createReader(Completer completer) {
+            return LineReaderBuilder.builder()
+                    .terminal(this.terminal)
+                    .completer(completer)
+                    .build();
         }
 
         @Override
@@ -222,7 +229,7 @@ public class TerminalUi {
         }
 
         @Override
-        public LineReader createReader() {
+        public LineReader createReader(Completer completer) {
             try {
                 Terminal terminal = TerminalBuilder
                         .builder()
