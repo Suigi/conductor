@@ -4,6 +4,7 @@ import ninja.ranner.conductor.domain.RemoteTimer;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -191,6 +192,40 @@ public class ConductorApiClientTest {
             assertThat(trackedCommands.single())
                     .isEqualTo(new ConductorApiClient.Command.StartTimer("some_timer"));
         }
+    }
+
+    @Nested
+    class ConfigurableResponses {
+
+        @Test
+        void fetch_withNoConfiguredResponse_returnsDefaultResponse() throws IOException, InterruptedException {
+            ConductorApiClient apiClient = ConductorApiClient.createNull();
+
+            Optional<RemoteTimer> timer = apiClient.fetchTimer("any_timer");
+
+            assertThat(timer)
+                    .contains(new RemoteTimer("DEFAULT TIMER",
+                            Duration.ofMinutes(5),
+                            RemoteTimer.State.Waiting,
+                            List.of("DEFAULT PARTICIPANT")));
+        }
+
+        @Test
+        void fetch_withConfiguredResponse_returnsConfiguredRemoteTimer() throws IOException, InterruptedException {
+            RemoteTimer remoteTimer = new RemoteTimer(
+                    "remote timer",
+                    Duration.of(14, ChronoUnit.SECONDS),
+                    RemoteTimer.State.Running,
+                    List.of("Alpha", "Bravo")
+            );
+            ConductorApiClient apiClient = ConductorApiClient.createNull(c -> c.returning(remoteTimer));
+
+            Optional<RemoteTimer> timer = apiClient.fetchTimer("IRRELEVANT_NAME");
+
+            assertThat(timer)
+                    .contains(remoteTimer);
+        }
+
     }
 
 

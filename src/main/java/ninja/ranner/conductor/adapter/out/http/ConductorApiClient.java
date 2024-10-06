@@ -1,5 +1,6 @@
 package ninja.ranner.conductor.adapter.out.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import ninja.ranner.conductor.adapter.OutputListener;
 import ninja.ranner.conductor.adapter.OutputTracker;
@@ -12,6 +13,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ConductorApiClient {
@@ -29,10 +31,56 @@ public class ConductorApiClient {
     }
 
     public static ConductorApiClient createNull() {
+        return createNull(Function.identity());
+    }
+
+    public static ConductorApiClient createNull(Function<Config, Config> configure) {
+        Config config = configure.apply(new Config());
         return new ConductorApiClient(
-                HttpClient.createNull(),
+                config.httpClient(),
                 "https://conductor-api.example.com");
     }
+
+    public static class Config {
+
+        private RemoteTimer remoteTimer = new RemoteTimer(
+                "DEFAULT TIMER",
+                Duration.ofMinutes(5),
+                RemoteTimer.State.Waiting,
+                List.of("DEFAULT PARTICIPANT")
+        );
+
+        public Config returning(RemoteTimer remoteTimer) {
+            this.remoteTimer = remoteTimer;
+            return this;
+        }
+
+        HttpClient httpClient() {
+            String responseBody = """
+                    {
+                        "name": "%s",
+                        "status": "%s",
+                        "remainingSeconds": %d,
+                        "participants": [%s]
+                    }
+                    """.formatted(
+                    remoteTimer.name(),
+                    remoteTimer.state(),
+                    remoteTimer.remaining().getSeconds(),
+                    remoteTimer.participants()
+                            .stream()
+                            .map("\"%s\""::formatted)
+                            .collect(Collectors.joining(", ")));
+            return HttpClient.createNull(c -> c
+                    .respondingWith(new HttpClient.Response<>(
+                            200,
+                            responseBody)
+                    )
+            );
+        }
+
+    }
+
 
     public void createTimer(String timerName, int durationSeconds) throws IOException, InterruptedException {
         send(new Command.CreateTimer(
@@ -47,8 +95,7 @@ public class ConductorApiClient {
             return Optional.empty();
         }
 
-        JsonMapper jsonMapper = JsonMapper.builder().build();
-        Timer timer = jsonMapper.readValue(response.body(), Timer.class);
+        Timer timer = parseOrFail(response);
 
         return Optional.of(new RemoteTimer(
                 timer.name,
@@ -56,6 +103,17 @@ public class ConductorApiClient {
                 toDomainState(timer.status),
                 timer.participants()
         ));
+    }
+
+    private Timer parseOrFail(HttpClient.Response<String> response) {
+        JsonMapper jsonMapper = JsonMapper.builder().build();
+        Timer timer;
+        try {
+            timer = jsonMapper.readValue(response.body(), Timer.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse JSON response\n\n%s".formatted(response.body()), e);
+        }
+        return timer;
     }
 
     private RemoteTimer.State toDomainState(String status) {
