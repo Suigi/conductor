@@ -28,4 +28,13 @@ public class Lines {
     public int size() {
         return lines.size();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder allLines = new StringBuilder();
+        lines.stream()
+                .map("%s\n"::formatted)
+                .forEach(allLines::append);
+        return allLines.toString();
+    }
 }
