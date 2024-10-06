@@ -3,10 +3,13 @@ package ninja.ranner.conductor.adapter.out.http;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import ninja.ranner.conductor.adapter.OutputListener;
 import ninja.ranner.conductor.adapter.OutputTracker;
+import ninja.ranner.conductor.domain.RemoteTimer;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -21,6 +24,10 @@ public class ConductorApiClient {
         this.baseUrl = baseUrl;
     }
 
+    public static ConductorApiClient create(String baseUrl) {
+        return new ConductorApiClient(HttpClient.create(), baseUrl);
+    }
+
     public static ConductorApiClient createNull() {
         return new ConductorApiClient(
                 HttpClient.createNull(),
@@ -33,7 +40,7 @@ public class ConductorApiClient {
                 durationSeconds));
     }
 
-    public Optional<Timer> fetchTimer(String timerName) throws IOException, InterruptedException {
+    public Optional<RemoteTimer> fetchTimer(String timerName) throws IOException, InterruptedException {
         HttpClient.Response<String> response = send(new Command.FetchTimer(timerName));
 
         if (response.statusCode() == 404) {
@@ -43,7 +50,22 @@ public class ConductorApiClient {
         JsonMapper jsonMapper = JsonMapper.builder().build();
         Timer timer = jsonMapper.readValue(response.body(), Timer.class);
 
-        return Optional.of(timer);
+        return Optional.of(new RemoteTimer(
+                timer.name,
+                Duration.of(timer.remainingSeconds, ChronoUnit.SECONDS),
+                toDomainState(timer.status),
+                timer.participants()
+        ));
+    }
+
+    private RemoteTimer.State toDomainState(String status) {
+        return switch (status) {
+            case "Waiting" -> RemoteTimer.State.Waiting;
+            case "Running" -> RemoteTimer.State.Running;
+            case "Paused" -> RemoteTimer.State.Paused;
+            case "Finished" -> RemoteTimer.State.Finished;
+            default -> throw new IllegalStateException("Unexpected value: " + status);
+        };
     }
 
     public void startTimer(String timerName) throws IOException, InterruptedException {
@@ -52,6 +74,10 @@ public class ConductorApiClient {
 
     public void pauseTimer(String timerName) throws IOException, InterruptedException {
         send(new Command.PauseTimer(timerName));
+    }
+
+    public void nextTurn(String timerName) throws IOException, InterruptedException {
+        send(new Command.NextTurn(timerName));
     }
 
     public void updateParticipants(String timerName, List<String> participants) throws IOException, InterruptedException {
@@ -78,6 +104,7 @@ public class ConductorApiClient {
 
     public sealed interface Command permits Command.CreateTimer,
             Command.FetchTimer,
+            Command.NextTurn,
             Command.PauseTimer,
             Command.StartTimer,
             Command.UpdateParticipants {
@@ -178,6 +205,24 @@ public class ConductorApiClient {
             @Override
             public String path() {
                 return "/timers/" + timerName;
+            }
+
+            @Override
+            public Optional<String> body() {
+                return Optional.empty();
+            }
+        }
+
+        record NextTurn(String timerName) implements Command {
+
+            @Override
+            public String method() {
+                return "POST";
+            }
+
+            @Override
+            public String path() {
+                return "/timers/" + timerName + "/next_turn";
             }
 
             @Override
