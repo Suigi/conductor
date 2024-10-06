@@ -24,6 +24,7 @@ public class TimerTransformer {
                 "Time:        %s".formatted(renderRemainingTime(timer)),
                 ""
         );
+        //noinspection SizeReplaceableByIsEmpty
         if (timer.participants().size() > 0) {
             lines.append("Navigator:   %s".formatted(timer.participants().get(0)));
         }
