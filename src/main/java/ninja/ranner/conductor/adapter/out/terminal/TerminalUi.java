@@ -1,5 +1,7 @@
 package ninja.ranner.conductor.adapter.out.terminal;
 
+import ninja.ranner.conductor.adapter.OutputListener;
+import ninja.ranner.conductor.adapter.OutputTracker;
 import org.jline.reader.*;
 import org.jline.reader.impl.completer.NullCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
@@ -16,6 +18,7 @@ import java.util.function.Function;
 public class TerminalUi {
     private final LineReader reader;
     private final ATerminal terminal;
+    private final OutputListener<String> screenListener = new OutputListener<>();
     private Lines lines = Lines.of();
     private Consumer<String> commandHandler = ignored -> {
     };
@@ -70,6 +73,8 @@ public class TerminalUi {
     }
 
     private void render() {
+        screenListener.emit(lines.toString());
+
         terminal.puts(InfoCmp.Capability.clear_screen);
 
         lines.all().forEach(terminal::println);
@@ -99,6 +104,10 @@ public class TerminalUi {
     public static Fixture createNull(Function<Config, Config> configure) {
         Config config = configure.apply(new Config());
         return config.createFixture();
+    }
+
+    public OutputTracker<String> trackScreens() {
+        return screenListener.track();
     }
 
     public record Fixture(TerminalUi terminalUi, Controls controls) {
