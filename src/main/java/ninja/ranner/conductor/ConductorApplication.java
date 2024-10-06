@@ -2,13 +2,10 @@ package ninja.ranner.conductor;
 
 import ninja.ranner.conductor.adapter.in.clock.Scheduler;
 import ninja.ranner.conductor.adapter.out.http.ConductorApiClient;
-import ninja.ranner.conductor.adapter.out.terminal.Lines;
 import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
-import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
-import ninja.ranner.conductor.domain.RemoteTimer;
+import ninja.ranner.conductor.application.Root;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class ConductorApplication {
@@ -36,22 +33,14 @@ public class ConductorApplication {
                 // ignored (for now)
             }
         });
-        Scheduler scheduler = Scheduler.create(TimeUnit.SECONDS);
-        try (AutoCloseable ignored = scheduler.start(() -> renderRemoteTimer(tui))) {
-            tui.run();
-        }
-    }
 
-    private static void renderRemoteTimer(TerminalUi terminalUi) {
-        TimerTransformer transformer = new TimerTransformer(null);
-        try {
-            Optional<RemoteTimer> timer = apiClient.fetchTimer(timerName);
-            Lines lines = transformer.transform(timer.orElseThrow());
-            terminalUi.update(lines);
-        } catch (Exception e) {
-            terminalUi.update(Lines.of("Failed to fetch remote timer:", e.getMessage()));
-        }
-
+        Root root = new Root(
+                Scheduler.create(TimeUnit.SECONDS),
+                tui,
+                ConductorApiClient.create("http://localhost:8080"),
+                timerName
+        );
+        root.startInBackground().join();
     }
 
 }
