@@ -11,9 +11,13 @@ import java.util.concurrent.TimeUnit;
 public class ConductorApplication {
 
     private static final String timerName = "my-timer";
-    private static final ConductorApiClient apiClient = ConductorApiClient.create("http://localhost:8080");
+    private static final ConductorApiClient apiClient = ConductorApiClient
+            .create("http://localhost:8080");
 
     public static void main(String[] args) throws Exception {
+        // The list of available commands and how to handle them
+        // should move out of this method to ... somewhere else.
+        // But, is that an In Adapter or an Application level concern?
         TerminalUi tui = TerminalUi.create(List.of(
                 "quit",
                 "load",
@@ -37,7 +41,7 @@ public class ConductorApplication {
         Root root = new Root(
                 Scheduler.create(TimeUnit.SECONDS),
                 tui,
-                ConductorApiClient.create("http://localhost:8080"),
+                apiClient,
                 timerName
         );
         root.startInBackground().join();
