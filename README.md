@@ -6,6 +6,8 @@ This allows us to stay within our IDE more.
 In addition, we'll integrate Conductor with the [mob.sh](https://mob.sh) command line tool, so you can run `mob next`
 and `mob start` commands from within Conductor (some day it might even run them for you at specific points in time).
 
+[![asciicast](https://asciinema.org/a/osBaFnrpvGH13GADqdZxjvHwy.svg)](https://asciinema.org/a/osBaFnrpvGH13GADqdZxjvHwy)
+
 ## Dependencies
 
 This project uses
