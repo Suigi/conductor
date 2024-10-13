@@ -1,10 +1,13 @@
 package ninja.ranner.conductor.adapter.out.http;
 
-import org.junit.jupiter.api.Disabled;
+import ninja.ranner.conductor.domain.RemoteTimer;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,18 +78,17 @@ public class ConductorApiClientTest {
     }
 
     @Test
-    @Disabled("test list")
     void nextTurnSendsPostRequest() throws Exception {
         HttpClient httpClient = HttpClient.createNull();
         var trackedRequests = httpClient.trackRequests();
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        apiClient.pauseTimer("TIMER_NAME");
+        apiClient.nextTurn("TIMER_NAME");
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
                         "POST",
-                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME/pause"),
+                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME/next_turn"),
                         ""
                 ));
     }
@@ -133,7 +135,7 @@ public class ConductorApiClientTest {
                 .respondingWith(new HttpClient.Response<>(200, """
                         {
                           "name": "my_timer",
-                          "status": "Waiting",
+                          "status": "Running",
                           "remainingSeconds": 32,
                           "participants": [
                             "Joe",
@@ -143,15 +145,13 @@ public class ConductorApiClientTest {
                         """)));
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        Optional<ConductorApiClient.Timer> timer = apiClient.fetchTimer("TIMER_NAME");
+        Optional<RemoteTimer> timer = apiClient.fetchTimer("TIMER_NAME");
 
         assertThat(timer)
-                .isPresent();
-        assertThat(timer)
-                .contains(new ConductorApiClient.Timer(
+                .contains(new RemoteTimer(
                         "my_timer",
-                        "Waiting",
-                        32,
+                        Duration.of(32, ChronoUnit.SECONDS),
+                        RemoteTimer.State.Running,
                         List.of("Joe", "Abby")
                 ));
     }
@@ -162,7 +162,7 @@ public class ConductorApiClientTest {
                 .respondingWith(new HttpClient.Response<>(404, "")));
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        Optional<ConductorApiClient.Timer> timer = apiClient.fetchTimer("TIMER_NAME");
+        Optional<RemoteTimer> timer = apiClient.fetchTimer("TIMER_NAME");
 
         assertThat(timer)
                 .isEmpty();
@@ -192,6 +192,40 @@ public class ConductorApiClientTest {
             assertThat(trackedCommands.single())
                     .isEqualTo(new ConductorApiClient.Command.StartTimer("some_timer"));
         }
+    }
+
+    @Nested
+    class ConfigurableResponses {
+
+        @Test
+        void fetch_withNoConfiguredResponse_returnsDefaultResponse() throws IOException, InterruptedException {
+            ConductorApiClient apiClient = ConductorApiClient.createNull();
+
+            Optional<RemoteTimer> timer = apiClient.fetchTimer("any_timer");
+
+            assertThat(timer)
+                    .contains(new RemoteTimer("DEFAULT TIMER",
+                            Duration.ofMinutes(5),
+                            RemoteTimer.State.Waiting,
+                            List.of("DEFAULT PARTICIPANT")));
+        }
+
+        @Test
+        void fetch_withConfiguredResponse_returnsConfiguredRemoteTimer() throws IOException, InterruptedException {
+            RemoteTimer remoteTimer = new RemoteTimer(
+                    "remote timer",
+                    Duration.of(14, ChronoUnit.SECONDS),
+                    RemoteTimer.State.Running,
+                    List.of("Alpha", "Bravo")
+            );
+            ConductorApiClient apiClient = ConductorApiClient.createNull(c -> c.returning(remoteTimer));
+
+            Optional<RemoteTimer> timer = apiClient.fetchTimer("IRRELEVANT_NAME");
+
+            assertThat(timer)
+                    .contains(remoteTimer);
+        }
+
     }
 
 

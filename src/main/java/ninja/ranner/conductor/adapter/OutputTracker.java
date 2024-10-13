@@ -2,6 +2,7 @@ package ninja.ranner.conductor.adapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OutputTracker<T> {
@@ -20,7 +21,12 @@ public class OutputTracker<T> {
             throw new IllegalStateException("Expected output to have a single element, but output was empty");
         }
         if (entries.size() > 1) {
-            throw new IllegalStateException("Expected output to have a single element, but found: " + entries.size());
+            throw new IllegalStateException("Expected output to have a single element, but found: %d\n\n%s".formatted(
+                    entries.size(),
+                    entries.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining("\n"))
+            ));
         }
         return entries.getFirst();
     }

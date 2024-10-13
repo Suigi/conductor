@@ -1,26 +1,53 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-footbox off
 skinparam ParticipantPadding 10
 skinparam BoxPadding 20
 
-box InAdapters #F1E6FF
+box In Adapters #F1E6FF
 participant Scheduler as scheduler
+participant "Line Reader" as reader
 box Application #FFEFE6
-participant "main()" as main
+participant "Root" as root
 box Domain #F7F0D2
 participant Timer as timer
-box OutAdapters #DAE4F7
+box Out Adapters #DAE4F7
 participant "API" as api
 participant "Terminal UI" as tui
 
+group Tick
 scheduler --> scheduler: 1 second passed
-scheduler -> main: per-second-callback()
-main -> api: fetchTimer()
+scheduler -> root: per-second-callback()
+activate root
+root -> api: fetchTimer()
+activate api
 api -> timer: new()
 api <-- timer: <timer>
-main <-- api: <timer>
-main -> tui: render app state(timer)
+return <timer>
+'root <-- api: <timer>
+'deactivate api
+root -> tui: render app state(timer)
+deactivate root
+end
+
+group Pause
+' make the box span the full width
+scheduler -[hidden]-> tui
+
+reader -> root: "pause" command
+activate root
+root -> api: pauseTimer()
+activate api
+return
+root -> api: fetchTimer()
+activate api
+api -> timer: new()
+api <-- timer: <timer>
+return <timer>
+root -> tui: render app state(timer)
+deactivate root
+
+end
+
 
 @enduml

@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 
+@SuppressWarnings("resource")
 class SchedulerTest {
 
     @Test
