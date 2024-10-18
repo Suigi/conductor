@@ -2,14 +2,6 @@
 
 ## Tasks
 
-- [.] Display the timer
-  - [.] Pause the timer
-    - [.] Make the `Scheduler` stop running its `command`
-  - [ ] Resume the timer
-  - [ ] Show timer state (running/paused/time remaining) in UI
-  - [ ] Render time remaining (prettily)
-  - [ ] Share it with some server
-    - [ ] Share things that happen through some kind of events / commands?
 - [ ] Figure out test for where to call `draw` / wiring up the application
 - [ ] Run mob commands
   - [ ] Display mob command output
@@ -19,6 +11,14 @@
 
 ## Done
 
+- [X] Display participants
+- [X] Display the timer
+  - [X] Pause the timer
+  - [X] Resume the timer
+  - [X] Show timer state (running/paused/time remaining) in UI
+  - [X] Render time remaining (prettily)
+  - [X] Share it with conductor-api backend
+- [X] Make the `Scheduler` stop running its `command`
 - [X] Create an out adapter that takes the timer and shows it on the screen
 - [X] Create an IN adapter for receiving scheduled callbacks
 - [X] When time is up, print "Timer's up!"
