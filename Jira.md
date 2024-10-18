@@ -2,6 +2,7 @@
 
 ## Tasks
 
+- [ ] Make sure timer names in conductor-api calls are url encoded
 - [ ] Figure out test for where to call `draw` / wiring up the application
 - [ ] Run mob commands
   - [ ] Display mob command output
