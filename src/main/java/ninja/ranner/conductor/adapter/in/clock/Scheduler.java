@@ -63,8 +63,7 @@ public class Scheduler {
     public static class DummyExecutor implements Scheduler.CommandExecutor {
         @Override
         public AutoCloseable schedule(Runnable command, int initialDelay, int period, TimeUnit timeUnit) {
-            return () -> {
-            };
+            return () -> {};
         }
     }
 }
