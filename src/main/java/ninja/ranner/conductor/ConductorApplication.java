@@ -1,40 +1,50 @@
 package ninja.ranner.conductor;
 
 import ninja.ranner.conductor.adapter.in.clock.Scheduler;
-import ninja.ranner.conductor.adapter.out.terminal.Lines;
+import ninja.ranner.conductor.adapter.out.http.ConductorApiClient;
 import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
-import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
-import ninja.ranner.conductor.domain.Timer;
+import ninja.ranner.conductor.application.Root;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ConductorApplication {
 
-    private static String lastCommand = "";
-    private static final Timer timer = new Timer(5);
+    private static final String timerName = "my-timer";
+    private static final ConductorApiClient apiClient = ConductorApiClient
+            .create("http://localhost:8080");
 
     public static void main(String[] args) throws Exception {
-        TerminalUi tui = TerminalUi.create();
+        // The list of available commands and how to handle them
+        // should move out of this method to ... somewhere else.
+        // But, is that an In Adapter or an Application level concern?
+        TerminalUi tui = TerminalUi.create(List.of(
+                "quit",
+                "load",
+                "save",
+                "pause",
+                "start",
+                "rotate"));
 
         tui.registerCommandHandler(cmd -> {
-            lastCommand = cmd;
-            renderAppState(tui);
+            try {
+                switch (cmd) {
+                    case "start" -> apiClient.startTimer(timerName);
+                    case "pause" -> apiClient.pauseTimer(timerName);
+                    case "rotate" -> apiClient.nextTurn(timerName);
+                }
+            } catch (Exception e) {
+                // ignored (for now)
+            }
         });
-        renderAppState(tui);
-        try (AutoCloseable ignored = Scheduler.create(TimeUnit.SECONDS).start(() -> {
-            timer.tick();
-            renderAppState(tui);
-        })) {
-            tui.run();
-        }
-    }
 
-    private static void renderAppState(TerminalUi tui) {
-        Lines lines = new TimerTransformer(timer).transform();
-        if (!lastCommand.isEmpty()) {
-            lines.append("", "You said: " + lastCommand);
-        }
-        tui.update(lines);
+        Root root = new Root(
+                Scheduler.create(TimeUnit.SECONDS),
+                tui,
+                apiClient,
+                timerName
+        );
+        root.startInBackground().join();
     }
 
 }

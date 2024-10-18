@@ -1,5 +1,6 @@
 package ninja.ranner.conductor.adapter.out.terminal;
 
+import ninja.ranner.conductor.adapter.OutputTracker;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Nested;
@@ -74,6 +75,21 @@ public class TerminalUiTest {
             fixture.controls().simulateCommand("quit");
 
             uiThread.join(Duration.ofMillis(10));
+        }
+
+        @Test
+        void tracksUpdatedScreens() {
+            TerminalUi.Fixture fixture = TerminalUi.createNull();
+            OutputTracker<String> trackedScreens = fixture.terminalUi().trackScreens();
+
+            fixture.terminalUi().update(Lines.of("First Line", "", "Third Line"));
+
+            assertThat(trackedScreens.single())
+                    .isEqualTo("""
+                            First Line
+                                                       
+                            Third Line
+                            """);
         }
 
         private static ConditionFactory await() {
