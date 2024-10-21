@@ -51,12 +51,12 @@ public class ConductorApiClientTest {
         var trackedRequests = httpClient.trackRequests();
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        apiClient.startTimer("TIMER_NAME");
+        apiClient.startTimer("timer name");
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
                         "POST",
-                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME/start"),
+                        URI.create("https://conductor-api.example.com/timers/timer%20name/start"),
                         ""
                 ));
     }
@@ -67,12 +67,12 @@ public class ConductorApiClientTest {
         var trackedRequests = httpClient.trackRequests();
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        apiClient.pauseTimer("TIMER_NAME");
+        apiClient.pauseTimer("timer name");
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
                         "POST",
-                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME/pause"),
+                        URI.create("https://conductor-api.example.com/timers/timer%20name/pause"),
                         ""
                 ));
     }
@@ -83,12 +83,12 @@ public class ConductorApiClientTest {
         var trackedRequests = httpClient.trackRequests();
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        apiClient.nextTurn("TIMER_NAME");
+        apiClient.nextTurn("timer name");
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
                         "POST",
-                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME/next_turn"),
+                        URI.create("https://conductor-api.example.com/timers/timer%20name/next_turn"),
                         ""
                 ));
     }
@@ -99,12 +99,12 @@ public class ConductorApiClientTest {
         var trackedRequests = httpClient.trackRequests();
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        apiClient.updateParticipants("TIMER_NAME", List.of("Amy", "Mia"));
+        apiClient.updateParticipants("timer name", List.of("Amy", "Mia"));
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
                         "POST",
-                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME/participants"),
+                        URI.create("https://conductor-api.example.com/timers/timer%20name/participants"),
                         """
                                 {
                                     "participants": ["Amy", "Mia"]
@@ -119,12 +119,12 @@ public class ConductorApiClientTest {
         var trackedRequests = httpClient.trackRequests();
         ConductorApiClient apiClient = new ConductorApiClient(httpClient, "https://conductor-api.example.com");
 
-        apiClient.fetchTimer("TIMER_NAME");
+        apiClient.fetchTimer("timer name");
 
         assertThat(trackedRequests.single())
                 .isEqualTo(new HttpClient.Request(
                         "GET",
-                        URI.create("https://conductor-api.example.com/timers/TIMER_NAME"),
+                        URI.create("https://conductor-api.example.com/timers/timer%20name"),
                         ""
                 ));
     }

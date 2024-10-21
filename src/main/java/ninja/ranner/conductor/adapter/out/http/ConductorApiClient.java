@@ -8,6 +8,7 @@ import ninja.ranner.conductor.domain.RemoteTimer;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -166,6 +167,7 @@ public class ConductorApiClient {
             Command.PauseTimer,
             Command.StartTimer,
             Command.UpdateParticipants {
+
         String method();
 
         String path();
@@ -203,7 +205,7 @@ public class ConductorApiClient {
 
             @Override
             public String path() {
-                return "/timers/" + timerName + "/start";
+                return buildPath("timers", timerName, "start");
             }
 
             @Override
@@ -220,7 +222,7 @@ public class ConductorApiClient {
 
             @Override
             public String path() {
-                return "/timers/" + timerName + "/pause";
+                return buildPath("timers", timerName, "pause");
             }
 
             @Override
@@ -237,7 +239,7 @@ public class ConductorApiClient {
 
             @Override
             public String path() {
-                return "/timers/" + timerName + "/participants";
+                return buildPath("timers", timerName, "participants");
             }
 
             @Override
@@ -262,7 +264,7 @@ public class ConductorApiClient {
 
             @Override
             public String path() {
-                return "/timers/" + timerName;
+                return buildPath("timers", timerName);
             }
 
             @Override
@@ -280,13 +282,22 @@ public class ConductorApiClient {
 
             @Override
             public String path() {
-                return "/timers/" + timerName + "/next_turn";
+                return buildPath("timers", timerName, "next_turn");
             }
 
             @Override
             public Optional<String> body() {
                 return Optional.empty();
             }
+        }
+    }
+
+    public static String buildPath(String... segments) {
+        try {
+            URI uri = new URI("http", "example.com", "/" + String.join("/", segments), "");
+            return uri.getRawPath();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
