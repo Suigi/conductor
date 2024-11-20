@@ -1,13 +1,15 @@
 # What are we doing?
 
+- [ ] Run mob commands
+  - [ ] HERE Display any text in `less` triggered by a command
+  - [ ] Run mob.sh and display its output
+
 ## Tasks
 
 - [ ] Figure out test for where to call `draw` / wiring up the application
-- [ ] Run mob commands
-  - [ ] Display mob command output
-- [ ] Explore what else we can do with Spring Shell
-  - [ ] What other views are there?
-  - [ ] Can we show scrolling text?
+- [ ] Have parameters for your own name and which remote timer to use
+  - Note: Ensembler only has one active timer at any time, so we could just
+    hard-code that one for starters
 
 ## Done
 
