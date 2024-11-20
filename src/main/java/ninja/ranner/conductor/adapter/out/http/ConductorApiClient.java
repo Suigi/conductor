@@ -152,6 +152,7 @@ public class ConductorApiClient {
                                 .map(HttpRequest.BodyPublishers::ofString)
                                 .orElse(HttpRequest.BodyPublishers.noBody())
                 )
+                .header("User-Agent", "conductor")
                 .uri(URI.create("%s%s".formatted(baseUrl, command.path())))
                 .build();
         return httpClient.sendRequest(request);
