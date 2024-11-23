@@ -17,8 +17,35 @@ public class Root {
     private final Map<String, CommandHandler> commandHandlers = Map.of(
             "q", CommandHandler.of(this::quit),
             "quit", CommandHandler.of(this::quit),
-            "less", CommandHandler.of(this::less)
+            "less", CommandHandler.of(this::less),
+            "start", CommandHandler.of(this::start),
+            "pause", CommandHandler.of(this::pause),
+            "rotate", CommandHandler.of(this::rotate)
     );
+
+    private void start() {
+        try {
+            apiClient.startTimer(timerName);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void pause() {
+        try {
+            apiClient.pauseTimer(timerName);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void rotate() {
+        try {
+            apiClient.nextTurn(timerName);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @FunctionalInterface
     public interface CommandHandler {
@@ -61,8 +88,6 @@ public class Root {
         CommandHandler handler = commandHandlers.get(command);
         if (handler != null) {
             handler.handle(command);
-        } else {
-            terminalUi.update(Lines.of("Last command: " + command));
         }
     }
 

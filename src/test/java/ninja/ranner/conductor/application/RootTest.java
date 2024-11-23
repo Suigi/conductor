@@ -9,11 +9,14 @@ import ninja.ranner.conductor.domain.RemoteTimer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -78,5 +81,57 @@ class RootTest {
 
         mainThread.join();
     }
+
+    @Test
+    void onPauseCommand_pausesRemoteTimer() throws InterruptedException {
+        ConductorApiClient apiClient = ConductorApiClient.createNull();
+        var trackedCommands = apiClient.trackCommands();
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Root root = new Root(
+                Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                apiClient,
+                "my timer"
+        );
+        Thread mainThread = root.startInBackground();
+
+        tuiFixture.controls().simulateCommand("pause");
+        tuiFixture.controls().simulateCommand("quit");
+
+        mainThread.join();
+        assertThat(trackedCommands.single())
+                .isEqualTo(new ConductorApiClient.Command.PauseTimer("my timer"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("timerCommandCases")
+    void onTimerCommand_sendsToRemoteTimer(String command, ConductorApiClient.Command expectedApiCommand) throws InterruptedException {
+        ConductorApiClient apiClient = ConductorApiClient.createNull();
+        var trackedCommands = apiClient.trackCommands();
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Root root = new Root(
+                Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                apiClient,
+                "my timer"
+        );
+        Thread mainThread = root.startInBackground();
+
+        tuiFixture.controls().simulateCommand(command);
+        tuiFixture.controls().simulateCommand("quit");
+
+        mainThread.join();
+        assertThat(trackedCommands.single())
+                .isEqualTo(expectedApiCommand);
+    }
+
+    public static Stream<Arguments> timerCommandCases() {
+        return Stream.of(
+                Arguments.of("start", new ConductorApiClient.Command.StartTimer("my timer")),
+                Arguments.of("pause", new ConductorApiClient.Command.PauseTimer("my timer")),
+                Arguments.of("rotate", new ConductorApiClient.Command.NextTurn("my timer"))
+        );
+    }
+
 
 }

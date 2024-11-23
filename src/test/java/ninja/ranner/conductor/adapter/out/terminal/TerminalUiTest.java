@@ -34,7 +34,7 @@ public class TerminalUiTest {
             ));
 
             assertThat(outputStream.toString())
-                    .isEqualTo("""
+                    .startsWith("""
                             First line
                                                         
                             Third line
@@ -50,7 +50,7 @@ public class TerminalUiTest {
             tui.update(Lines.of("Second Screen"));
 
             assertThat(outputStream.toString())
-                    .isEqualTo("""
+                    .startsWith("""
                             Second Screen
                             """);
         }
@@ -95,19 +95,26 @@ public class TerminalUiTest {
 
         @Test
         void lessRendersTextOnScreen() {
-            TerminalUi.Fixture fixture = TerminalUi.createNull();
-            TerminalUi tui = fixture.terminalUi();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi tui = TerminalUi.createNull(c -> c.outputTo(outputStream)).terminalUi();
             OutputTracker<String> trackedScreens = tui.trackScreens();
-            fixture.startAsync();
 
             trackedScreens.clear();
             Thread.startVirtualThread(() -> tui.less("First line\nSecond line"));
 
             await().until(trackedScreens::hasAny);
-            assertThat(trackedScreens.single())
+            assertThat(outputStream.toString())
                     .isEqualTo("""
                             1: First line
                             2: Second line
+                                                      
+                                                      
+                                                      
+                                                      
+                                                       
+                                                       
+                                                       
+                            Press q to exit.\
                             """);
         }
 
@@ -124,7 +131,7 @@ public class TerminalUiTest {
             fixture.controls().simulateKey("q");
 
             await().until(trackedScreens::hasAny);
-            assertThat(trackedScreens.single())
+            assertThat(trackedScreens.last())
                     .isEqualTo("""
                             Previous
                             Text

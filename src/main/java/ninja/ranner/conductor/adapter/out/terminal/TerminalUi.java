@@ -23,6 +23,7 @@ public class TerminalUi {
     private final ATerminal terminal;
     private final OutputListener<String> screenListener = new OutputListener<>();
     private Lines lines = Lines.of();
+    private String footer = "";
     private Consumer<String> commandHandler = ignored -> {
     };
 
@@ -60,6 +61,7 @@ public class TerminalUi {
         String line;
         try {
             line = reader.readLine("> ").trim();
+            render();
         } catch (UserInterruptException | EndOfFileException e) {
             line = "quit";
         }
@@ -91,17 +93,21 @@ public class TerminalUi {
         terminal.puts(InfoCmp.Capability.clear_screen);
 
         lines.all().forEach(terminal::println);
-
-        int linesToBottom = terminal.getSize().getRows() - lines.size();
-        for (int i = 0; i < linesToBottom - 1; i++) {
-            terminal.puts(InfoCmp.Capability.cursor_down);
-        }
+        moveCursorToBottom();
+        terminal.print(footer);
 
         if (reader.isReading()) {
             reader.callWidget(LineReader.REDRAW_LINE);
             reader.callWidget(LineReader.REDISPLAY);
         }
         terminal.flush();
+    }
+
+    private void moveCursorToBottom() {
+        int linesToBottom = terminal.getSize().getRows() - lines.size();
+        for (int i = 0; i < linesToBottom - 1; i++) {
+            terminal.puts(InfoCmp.Capability.cursor_down);
+        }
     }
 
     public void registerCommandHandler(Consumer<String> handler) {
@@ -125,6 +131,8 @@ public class TerminalUi {
 
     public void less(String text) {
         var previousLines = lines;
+        var previousFooter = footer;
+        footer = "Press q to exit.";
         BindingReader bindingReader = terminal.createBindingReader();
         KeyMap<String> keys = new KeyMap<>();
         keys.bind("exit-less", "q");
@@ -132,10 +140,11 @@ public class TerminalUi {
         while (!bindingReader.readBinding(keys).equals("exit-less")) {
             // ignored
         }
+        footer = previousFooter;
         update(previousLines);
     }
 
-    private static Lines linesWithNumbers(String text) {
+    private Lines linesWithNumbers(String text) {
         Lines lines = Lines.of();
         String[] split = text.split("\n");
         for (int i = 1; i <= split.length; i++) {
@@ -216,6 +225,8 @@ public class TerminalUi {
         LineReader createReader(Completer completer);
 
         BindingReader createBindingReader();
+
+        void print(String text);
     }
 
     public static class WrappedTerminal implements ATerminal {
@@ -259,6 +270,11 @@ public class TerminalUi {
             this.terminal.writer().println(line);
         }
 
+        @Override
+        public void print(String text) {
+            this.terminal.writer().print(text);
+        }
+
     }
 
     private static class StubTerminal implements ATerminal {
@@ -290,11 +306,19 @@ public class TerminalUi {
             if (InfoCmp.Capability.clear_screen.equals(capability)) {
                 outputStream.reset();
             }
+            if (InfoCmp.Capability.cursor_down.equals(capability)) {
+                printWriter.println();
+            }
         }
 
         @Override
         public void println(String line) {
             printWriter.println(line);
+        }
+
+        @Override
+        public void print(String text) {
+            printWriter.print(text);
         }
 
         @Override

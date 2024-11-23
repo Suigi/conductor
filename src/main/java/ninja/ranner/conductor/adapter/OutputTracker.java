@@ -31,6 +31,13 @@ public class OutputTracker<T> {
         return entries.getFirst();
     }
 
+    public T last() {
+        if (entries.isEmpty()) {
+            throw new IllegalStateException("Expected output to have at least one element, but output was empty");
+        }
+        return entries.getLast();
+    }
+
     public boolean hasAny() {
         return !entries.isEmpty();
     }

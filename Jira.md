@@ -1,7 +1,5 @@
 # What are we doing?
 
-- [ ] Move commands from `ConductorApplication` into `Root` and add tests
-
 ## Tasks
 
 - [ ] Run mob commands
@@ -16,6 +14,8 @@
 
 ## Done
 
+- [X] Move commands from `ConductorApplication` into `Root` and add tests
+  - [X] Start/Pause/Rotate timer
 - [X] Make sure timer names in conductor-api calls are url encoded
 - [X] Display participants
 - [X] Display the timer
