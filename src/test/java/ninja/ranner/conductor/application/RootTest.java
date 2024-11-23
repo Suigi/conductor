@@ -7,9 +7,13 @@ import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
 import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
 import ninja.ranner.conductor.domain.RemoteTimer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,17 +53,30 @@ class RootTest {
         root.startInBackground();
         Thread.sleep(1);
 
+        trackedScreens.clear();
         scheduler.simulateTick();
 
-        assertThat(trackedScreens.all())
-                .containsExactly(
-                        // Clear screen
-                        "",
-
-                        // Rendered timer
+        assertThat(trackedScreens.single())
+                .isEqualTo(
                         new TimerTransformer(null)
                                 .transform(remoteTimer)
                                 .toString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"quit", "q"})
+    @Timeout(value = 200, unit = TimeUnit.MILLISECONDS)
+    void onQuitCommand_terminatesMainThread(String simulatedCommand) throws InterruptedException {
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Root root = new Root(Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                ConductorApiClient.createNull(),
+                "IRRELEVANT");
+        Thread mainThread = root.startInBackground();
+
+        tuiFixture.controls().simulateCommand(simulatedCommand);
+
+        mainThread.join();
     }
 
 }

@@ -10,9 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.hamcrest.core.Is.is;
 
-@SuppressWarnings("resource")
 class SchedulerTest {
 
     @Test
@@ -21,7 +21,6 @@ class SchedulerTest {
         AtomicBoolean wasRun = new AtomicBoolean(false);
         Runnable command = () -> wasRun.set(true);
 
-        //noinspection resource
         scheduler.start(command);
 
         await().untilAtomic(wasRun, is(true));
@@ -32,7 +31,6 @@ class SchedulerTest {
         Scheduler scheduler = Scheduler.create(TimeUnit.MILLISECONDS);
         AtomicInteger runCounter = new AtomicInteger();
         Runnable command = runCounter::incrementAndGet;
-        //noinspection resource
         scheduler.start(command);
 
         int currentCount = runCounter.get();
@@ -67,6 +65,43 @@ class SchedulerTest {
 
         assertThat(wasRun)
                 .isTrue();
+    }
+
+    @Test
+    void throwsInvalidStateExceptionWhenResumingSchedulerThatWasNotStarted() {
+        Scheduler scheduler = Scheduler.createNull();
+
+        assertThatIllegalStateException()
+                .isThrownBy(scheduler::resume)
+                .withMessage("Cannot resume a Scheduler that was never started");
+    }
+
+    @Test
+    void nulledScheduler_whenStoppedAndSimulatingTick_doesNotRunCommand() {
+        Scheduler scheduler = Scheduler.createNull();
+        AtomicInteger runCount = new AtomicInteger(0);
+        scheduler.start(runCount::incrementAndGet);
+        scheduler.stop();
+
+        scheduler.simulateTick();
+
+        assertThat(runCount)
+                .hasValue(0);
+    }
+
+    @Test
+    void resumedSchedulerRunsCommand() {
+        Scheduler scheduler = Scheduler.createNull();
+        AtomicInteger runCount = new AtomicInteger(0);
+        scheduler.start(runCount::incrementAndGet);
+        scheduler.simulateTick();
+        scheduler.stop();
+
+        scheduler.resume();
+        scheduler.simulateTick();
+
+        assertThat(runCount)
+                .hasValue(2);
     }
 
     private static ConditionFactory await() {

@@ -1,5 +1,6 @@
 package ninja.ranner.conductor.adapter.in.clock;
 
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -10,6 +11,7 @@ public class Scheduler {
     private final CommandExecutor commandExecutor;
     private Runnable command;
     private AutoCloseable runningCommand;
+    private volatile boolean isRunning;
 
     private Scheduler(TimeUnit timeUnit, CommandExecutor commandExecutor) {
         this.timeUnit = timeUnit;
@@ -24,10 +26,22 @@ public class Scheduler {
         return new Scheduler(TimeUnit.MILLISECONDS, new DummyExecutor());
     }
 
-    public AutoCloseable start(Runnable command) {
+    public void start(Runnable command) {
+        Objects.requireNonNull(command, "command may not be null");
         this.command = command;
-        runningCommand = commandExecutor.schedule(command, 1, 1, timeUnit);
-        return runningCommand;
+        resume();
+    }
+
+    public void resume() {
+        if (command == null) {
+            throw new IllegalStateException("Cannot resume a Scheduler that was never started");
+        }
+        isRunning = true;
+        AutoCloseable closeSchedule = commandExecutor.schedule(command, 1, 1, timeUnit);
+        runningCommand = () -> {
+            isRunning = false;
+            closeSchedule.close();
+        };
     }
 
     public void stop() {
@@ -39,6 +53,9 @@ public class Scheduler {
     }
 
     public void simulateTick() {
+        if (!isRunning) {
+            return;
+        }
         command.run();
     }
 

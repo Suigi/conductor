@@ -31,4 +31,12 @@ public class OutputTracker<T> {
         return entries.getFirst();
     }
 
+    public boolean hasAny() {
+        return !entries.isEmpty();
+    }
+
+    public void clear() {
+        entries.clear();
+    }
+
 }

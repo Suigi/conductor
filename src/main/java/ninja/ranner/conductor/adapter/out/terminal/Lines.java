@@ -14,6 +14,7 @@ public class Lines {
 
     public static Lines of(String... lines) {
         return new Lines(Arrays.stream(lines)
+                .flatMap(l -> Arrays.stream(l.split("\n")))
                 .collect(Collectors.toList()));
     }
 

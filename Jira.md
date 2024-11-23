@@ -1,11 +1,14 @@
 # What are we doing?
 
-- [ ] Run mob commands
-  - [ ] HERE Display any text in `less` triggered by a command
-  - [ ] Run mob.sh and display its output
+- [ ] Move commands from `ConductorApplication` into `Root` and add tests
 
 ## Tasks
 
+- [ ] Run mob commands
+  - [ ] Display any text in `less` triggered by a command
+  - [ ] Don't show prompt when in `less`
+  - [ ] Make `less` output scrollable with j/k
+  - [ ] Run mob.sh and display its output
 - [ ] Figure out test for where to call `draw` / wiring up the application
 - [ ] Have parameters for your own name and which remote timer to use
   - Note: Ensembler only has one active timer at any time, so we could just

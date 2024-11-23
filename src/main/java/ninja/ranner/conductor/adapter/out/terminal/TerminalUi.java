@@ -2,12 +2,15 @@ package ninja.ranner.conductor.adapter.out.terminal;
 
 import ninja.ranner.conductor.adapter.OutputListener;
 import ninja.ranner.conductor.adapter.OutputTracker;
+import org.jline.keymap.BindingReader;
+import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
 import org.jline.reader.impl.completer.NullCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.terminal.impl.DumbTerminal;
 import org.jline.utils.InfoCmp;
 
 import java.io.*;
@@ -48,21 +51,31 @@ public class TerminalUi {
         String line = "";
         while (!line.equals("quit") && !line.equals("q")) {
             render();
-            try {
-                line = reader.readLine("> ").trim();
-            } catch (UserInterruptException | EndOfFileException e) {
-                line = "quit";
-            }
+            line = readCommand();
             commandHandler.accept(line);
         }
     }
 
-    private void enterCursorAddressingMode() {
+    public String readCommand() {
+        String line;
+        try {
+            line = reader.readLine("> ").trim();
+        } catch (UserInterruptException | EndOfFileException e) {
+            line = "quit";
+        }
+        return line;
+    }
+
+    public boolean isReading() {
+        return reader.isReading();
+    }
+
+    public void enterCursorAddressingMode() {
         terminal.puts(InfoCmp.Capability.enter_ca_mode);
         terminal.flush();
     }
 
-    private void exitCursorAddressingMode() {
+    public void exitCursorAddressingMode() {
         terminal.puts(InfoCmp.Capability.exit_ca_mode);
         terminal.flush();
     }
@@ -110,7 +123,40 @@ public class TerminalUi {
         return screenListener.track();
     }
 
+    public void less(String text) {
+        var previousLines = lines;
+        BindingReader bindingReader = terminal.createBindingReader();
+        KeyMap<String> keys = new KeyMap<>();
+        keys.bind("exit-less", "q");
+        update(linesWithNumbers(text));
+        while (!bindingReader.readBinding(keys).equals("exit-less")) {
+            // ignored
+        }
+        update(previousLines);
+    }
+
+    private static Lines linesWithNumbers(String text) {
+        Lines lines = Lines.of();
+        String[] split = text.split("\n");
+        for (int i = 1; i <= split.length; i++) {
+            lines.append("%d: %s".formatted(i, split[i - 1]));
+        }
+        return lines;
+    }
+
     public record Fixture(TerminalUi terminalUi, Controls controls) {
+        public Thread startAsync() {
+            Thread thread = Thread.ofVirtual().name("TerminalUI").start(terminalUi::run);
+            this.waitForReaderToBlock();
+            return thread;
+        }
+
+        public void waitForReaderToBlock() {
+            while (!terminalUi.isReading()) {
+                Thread.yield();
+            }
+        }
+
     }
 
     public static class Controls {
@@ -122,6 +168,11 @@ public class TerminalUi {
 
         public void simulateCommand(String command) {
             simulatePrintWriter.println(command);
+            simulatePrintWriter.flush();
+        }
+
+        public void simulateKey(String key) {
+            simulatePrintWriter.print(key);
             simulatePrintWriter.flush();
         }
     }
@@ -163,6 +214,8 @@ public class TerminalUi {
         void puts(InfoCmp.Capability capability);
 
         LineReader createReader(Completer completer);
+
+        BindingReader createBindingReader();
     }
 
     public static class WrappedTerminal implements ATerminal {
@@ -196,9 +249,16 @@ public class TerminalUi {
         }
 
         @Override
+        public BindingReader createBindingReader() {
+            terminal.enterRawMode();
+            return new BindingReader(terminal.reader());
+        }
+
+        @Override
         public void println(String line) {
             this.terminal.writer().println(line);
         }
+
     }
 
     private static class StubTerminal implements ATerminal {
@@ -240,18 +300,29 @@ public class TerminalUi {
         @Override
         public LineReader createReader(Completer completer) {
             try {
-                Terminal terminal = TerminalBuilder
-                        .builder()
-                        .streams(inputStream, new ByteArrayOutputStream())
-                        .dumb(true)
-                        .build();
+                DumbTerminal dumbTerminal = new DumbTerminal(
+                        inputStream,
+                        new ByteArrayOutputStream());
                 return LineReaderBuilder
                         .builder()
-                        .terminal(terminal)
+                        .terminal(dumbTerminal)
                         .build();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
+
+        @Override
+        public BindingReader createBindingReader() {
+            try {
+                DumbTerminal dumbTerminal = new DumbTerminal(
+                        inputStream,
+                        new ByteArrayOutputStream());
+                return new BindingReader(dumbTerminal.reader());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 }
