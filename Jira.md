@@ -2,6 +2,7 @@
 
 ## Tasks
 
+- [ ] Add Root commands to completer
 - [ ] Run mob commands
   - [ ] Display any text in `less` triggered by a command
   - [ ] Don't show prompt when in `less`

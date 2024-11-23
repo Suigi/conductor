@@ -15,7 +15,6 @@ import org.jline.utils.InfoCmp;
 
 import java.io.*;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class TerminalUi {
@@ -24,8 +23,6 @@ public class TerminalUi {
     private final OutputListener<String> screenListener = new OutputListener<>();
     private Lines lines = Lines.of();
     private String footer = "";
-    private Consumer<String> commandHandler = ignored -> {
-    };
 
     private TerminalUi(ATerminal terminal, Completer completer) {
         this.terminal = terminal;
@@ -39,24 +36,6 @@ public class TerminalUi {
         );
     }
 
-    public void run() {
-        enterCursorAddressingMode();
-        try {
-            lineReaderLoop();
-        } finally {
-            exitCursorAddressingMode();
-        }
-    }
-
-    private void lineReaderLoop() {
-        String line = "";
-        while (!line.equals("quit") && !line.equals("q")) {
-            render();
-            line = readCommand();
-            commandHandler.accept(line);
-        }
-    }
-
     public String readCommand() {
         String line;
         try {
@@ -66,10 +45,6 @@ public class TerminalUi {
             line = "quit";
         }
         return line;
-    }
-
-    public boolean isReading() {
-        return reader.isReading();
     }
 
     public void enterCursorAddressingMode() {
@@ -110,10 +85,6 @@ public class TerminalUi {
         }
     }
 
-    public void registerCommandHandler(Consumer<String> handler) {
-        this.commandHandler = handler;
-    }
-
     // ~~~ Embedded Stub below ~~~
 
     public static Fixture createNull() {
@@ -138,7 +109,7 @@ public class TerminalUi {
         keys.bind("exit-less", "q");
         update(linesWithNumbers(text));
         while (!bindingReader.readBinding(keys).equals("exit-less")) {
-            // ignored
+            // we want to add support for scrolling with j/k here
         }
         footer = previousFooter;
         update(previousLines);
@@ -154,18 +125,6 @@ public class TerminalUi {
     }
 
     public record Fixture(TerminalUi terminalUi, Controls controls) {
-        public Thread startAsync() {
-            Thread thread = Thread.ofVirtual().name("TerminalUI").start(terminalUi::run);
-            this.waitForReaderToBlock();
-            return thread;
-        }
-
-        public void waitForReaderToBlock() {
-            while (!terminalUi.isReading()) {
-                Thread.yield();
-            }
-        }
-
     }
 
     public static class Controls {

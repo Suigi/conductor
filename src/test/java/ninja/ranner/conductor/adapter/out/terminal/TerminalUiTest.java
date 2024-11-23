@@ -10,10 +10,8 @@ import org.junit.jupiter.api.Timeout;
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.is;
 
 public class TerminalUiTest {
 
@@ -53,29 +51,6 @@ public class TerminalUiTest {
                     .startsWith("""
                             Second Screen
                             """);
-        }
-
-        @Test
-        void emitsSimulatedCommand() {
-            TerminalUi.Fixture fixture = TerminalUi.createNull();
-            TerminalUi tui = fixture.terminalUi();
-            AtomicReference<String> receivedCommand = new AtomicReference<>("");
-            tui.registerCommandHandler(receivedCommand::set);
-            fixture.startAsync();
-
-            fixture.controls().simulateCommand("my command");
-
-            await().untilAtomic(receivedCommand, is("my command"));
-        }
-
-        @Test
-        void runReturnsWhenQuitCommandIsIssued() throws InterruptedException {
-            TerminalUi.Fixture fixture = TerminalUi.createNull();
-            Thread uiThread = fixture.startAsync();
-
-            fixture.controls().simulateCommand("quit");
-
-            uiThread.join(Duration.ofMillis(10));
         }
 
         @Test

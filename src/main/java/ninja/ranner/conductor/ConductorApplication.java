@@ -10,15 +10,16 @@ import java.util.concurrent.TimeUnit;
 
 public class ConductorApplication {
 
-    private static final String timerName = "my-timer";
+    private static final String timerName = "Ensemble Timer Demo";
     private static final ConductorApiClient apiClient = ConductorApiClient
-            .create("http://localhost:8080");
+            .create("http://localhost:8088");
 
     public static void main(String[] args) throws Exception {
         // The list of available commands and how to handle them
         // should move out of this method to ... somewhere else.
         // But, is that an In Adapter or an Application level concern?
         TerminalUi tui = TerminalUi.create(List.of(
+                "less",
                 "quit",
                 "load",
                 "save",
@@ -26,24 +27,13 @@ public class ConductorApplication {
                 "start",
                 "rotate"));
 
-        tui.registerCommandHandler(cmd -> {
-            try {
-                switch (cmd) {
-                    case "start" -> apiClient.startTimer(timerName);
-                    case "pause" -> apiClient.pauseTimer(timerName);
-                    case "rotate" -> apiClient.nextTurn(timerName);
-                }
-            } catch (Exception e) {
-                // ignored (for now)
-            }
-        });
-
         Root root = new Root(
                 Scheduler.create(TimeUnit.SECONDS),
                 tui,
                 apiClient,
                 timerName
         );
+
         root.startInBackground().join();
     }
 

@@ -113,7 +113,4 @@ public class Root {
         }
     }
 
-    public void less(String text) {
-        terminalUi.less(text);
-    }
 }
