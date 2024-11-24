@@ -20,16 +20,16 @@ public class Root {
             // built-in
             "q", CommandHandler.of(this::quit),
             "quit", CommandHandler.of(this::quit),
-            // temporary to test less
-            "less", CommandHandler.of(this::less),
             // timer controls
             "start", CommandHandler.of(this::start),
             "pause", CommandHandler.of(this::pause),
             "rotate", CommandHandler.of(this::rotate),
             // mob.sh
-            "status", CommandHandler.of(this::mobStatus),
+            "status", CommandHandler.of(() -> runAndPrintLess("mob status")),
+            "save", CommandHandler.of(() -> runAndPrintLess("mob next")),
+            "load", CommandHandler.of(() -> runAndPrintLess("mob start")),
             // git
-            "gss", CommandHandler.of(this::gitStatus)
+            "gss", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status --short"))
     );
 
     @FunctionalInterface
@@ -81,12 +81,6 @@ public class Root {
         keepRunning = false;
     }
 
-    private void less() {
-        scheduler.stop();
-        terminalUi.less("Hello, less!");
-        scheduler.resume();
-    }
-
     private void fetchAndRenderTimer() {
         try {
             TimerTransformer transformer = new TimerTransformer(null);
@@ -123,18 +117,12 @@ public class Root {
         }
     }
 
-    private void mobStatus() {
-        runAndPrintLess("mob status");
-    }
-
-    private void gitStatus() {
-        runAndPrintLess("git -c color.status=always status --short");
-    }
-
     private void runAndPrintLess(String command) {
-        Runner.RunResult result = runner.execute(command.split(" "));
         scheduler.stop();
-        terminalUi.less(result.stdout());
+        terminalUi.less("Running command\n  " + command, () -> {
+            Runner.RunResult result = runner.execute(command.split(" "));
+            return result.stdout();
+        });
         scheduler.resume();
     }
 

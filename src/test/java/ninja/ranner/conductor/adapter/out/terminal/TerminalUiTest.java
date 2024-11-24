@@ -74,9 +74,7 @@ public class TerminalUiTest {
             TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
             TerminalUi tui = tuiFixture.terminalUi();
 
-            Thread.startVirtualThread(() -> {
-                tui.less("First line\nSecond line");
-            });
+            Thread.startVirtualThread(() -> tui.less("First line\nSecond line"));
 
             tuiFixture.waitForScreen();
             Awaitility.await().until(() -> outputStream.toString().equals("""

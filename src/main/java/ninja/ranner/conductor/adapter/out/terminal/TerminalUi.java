@@ -16,6 +16,7 @@ import org.jline.utils.InfoCmp;
 import java.io.*;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class TerminalUi {
     private final LineReader reader;
@@ -101,13 +102,18 @@ public class TerminalUi {
     }
 
     public void less(String text) {
+        less("", () -> text);
+    }
+
+    public void less(String intro, Supplier<String> text) {
         var previousLines = lines;
         var previousFooter = footer;
+        update(Lines.of(intro));
         footer = "Press q to exit.";
+        update(linesWithNumbers(text.get()));
         BindingReader bindingReader = terminal.createBindingReader();
         KeyMap<String> keys = new KeyMap<>();
         keys.bind("exit-less", "q");
-        update(linesWithNumbers(text));
         while (!bindingReader.readBinding(keys).equals("exit-less")) {
             // we want to add support for scrolling with j/k here
         }
