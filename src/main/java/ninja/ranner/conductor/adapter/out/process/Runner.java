@@ -1,5 +1,8 @@
 package ninja.ranner.conductor.adapter.out.process;
 
+import ninja.ranner.conductor.adapter.OutputListener;
+import ninja.ranner.conductor.adapter.OutputTracker;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -8,6 +11,7 @@ import java.util.stream.Collectors;
 public class Runner {
 
     private final NullableRuntime runtime;
+    private final OutputListener<String> commandListener = new OutputListener<>();
 
     private Runner(NullableRuntime runtime) {
         this.runtime = runtime;
@@ -27,6 +31,7 @@ public class Runner {
 
     public RunResult execute(String... command) {
         try {
+            commandListener.emit(String.join(" ", command));
             var process = runtime.exec(command);
             process.waitFor();
             return new RunResult(process.exitValue(),
@@ -43,6 +48,10 @@ public class Runner {
             output = inputReader.lines().collect(Collectors.joining("\n"));
         }
         return output;
+    }
+
+    public OutputTracker<String> trackCommands() {
+        return commandListener.track();
     }
 
     public record RunResult(int exitCode, String stdout, String stderr) {

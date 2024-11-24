@@ -3,9 +3,11 @@ package ninja.ranner.conductor.application;
 import ninja.ranner.conductor.adapter.OutputTracker;
 import ninja.ranner.conductor.adapter.in.clock.Scheduler;
 import ninja.ranner.conductor.adapter.out.http.ConductorApiClient;
+import ninja.ranner.conductor.adapter.out.process.Runner;
 import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
 import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
 import ninja.ranner.conductor.domain.RemoteTimer;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,7 +30,7 @@ class RootTest {
         ConductorApiClient apiClient = ConductorApiClient.createNull();
         OutputTracker<ConductorApiClient.Command> trackedCommands = apiClient.trackCommands();
         TerminalUi tui = TerminalUi.createNull().terminalUi();
-        Root root = new Root(scheduler, tui, apiClient, "my_timer_name");
+        Root root = new Root(scheduler, tui, apiClient, "my_timer_name", Runner.createNull());
         root.startInBackground();
         Thread.sleep(1);
 
@@ -52,7 +54,7 @@ class RootTest {
                 .returning(remoteTimer));
         TerminalUi tui = TerminalUi.createNull().terminalUi();
         OutputTracker<String> trackedScreens = tui.trackScreens();
-        Root root = new Root(scheduler, tui, apiClient, null);
+        Root root = new Root(scheduler, tui, apiClient, null, Runner.createNull());
         root.startInBackground();
         Thread.sleep(1);
 
@@ -74,7 +76,8 @@ class RootTest {
         Root root = new Root(Scheduler.createNull(),
                 tuiFixture.terminalUi(),
                 ConductorApiClient.createNull(),
-                "IRRELEVANT");
+                "IRRELEVANT",
+                Runner.createNull());
         Thread mainThread = root.startInBackground();
 
         tuiFixture.controls().simulateCommand(simulatedCommand);
@@ -91,7 +94,8 @@ class RootTest {
                 Scheduler.createNull(),
                 tuiFixture.terminalUi(),
                 apiClient,
-                "my timer"
+                "my timer",
+                Runner.createNull()
         );
         Thread mainThread = root.startInBackground();
 
@@ -113,7 +117,8 @@ class RootTest {
                 Scheduler.createNull(),
                 tuiFixture.terminalUi(),
                 apiClient,
-                "my timer"
+                "my timer",
+                Runner.createNull()
         );
         Thread mainThread = root.startInBackground();
 
@@ -133,5 +138,71 @@ class RootTest {
         );
     }
 
+    @Test
+    void onMobStatusCommand_runsMobStatus() throws InterruptedException {
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Runner runner = Runner.createNull();
+        OutputTracker<String> trackedCommands = runner.trackCommands();
+        Root root = new Root(
+                Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                ConductorApiClient.createNull(),
+                "IRRELEVANT",
+                runner
+        );
+        Thread mainThread = root.startInBackground();
 
+        tuiFixture.controls().simulateCommand("status");
+        tuiFixture.controls().simulateKey("q");
+
+        tuiFixture.controls().simulateCommand("quit");
+        mainThread.join();
+        assertThat(trackedCommands.single())
+                .isEqualTo("mob status");
+    }
+
+    @Test
+    void onGitStatusCommand_runsGitStatus() throws InterruptedException {
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Runner runner = Runner.createNull();
+        OutputTracker<String> trackedCommands = runner.trackCommands();
+        Root root = new Root(
+                Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                ConductorApiClient.createNull(),
+                "IRRELEVANT",
+                runner
+        );
+        Thread mainThread = root.startInBackground();
+
+        tuiFixture.controls().simulateCommand("gss");
+        tuiFixture.controls().simulateKey("q");
+
+        tuiFixture.controls().simulateCommand("quit");
+        mainThread.join();
+        assertThat(trackedCommands.single())
+                .isEqualTo("git -c color.status=always status --short");
+    }
+
+    @Test
+    void onStatusCommand_printsMobStatusOutputToLess() throws InterruptedException {
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Runner runner = Runner.createNull(new Runner.RunResult(0, "> Mob Status Output <"));
+        Root root = new Root(
+                Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                ConductorApiClient.createNull(),
+                "IRRELEVANT",
+                runner
+        );
+        root.startInBackground();
+
+        tuiFixture.controls().simulateCommand("status");
+        tuiFixture.waitForScreen();
+
+        Awaitility.await().until(() -> tuiFixture
+                .trackedScreens()
+                .last()
+                .contains("> Mob Status Output <"));
+    }
 }

@@ -2,6 +2,7 @@ package ninja.ranner.conductor;
 
 import ninja.ranner.conductor.adapter.in.clock.Scheduler;
 import ninja.ranner.conductor.adapter.out.http.ConductorApiClient;
+import ninja.ranner.conductor.adapter.out.process.Runner;
 import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
 import ninja.ranner.conductor.application.Root;
 
@@ -31,7 +32,8 @@ public class ConductorApplication {
                 Scheduler.create(TimeUnit.SECONDS),
                 tui,
                 apiClient,
-                timerName
+                timerName,
+                Runner.create()
         );
 
         root.startInBackground().join();

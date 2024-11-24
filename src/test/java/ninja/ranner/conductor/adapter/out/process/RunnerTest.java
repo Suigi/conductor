@@ -1,12 +1,14 @@
 package ninja.ranner.conductor.adapter.out.process;
 
+import ninja.ranner.conductor.adapter.OutputTracker;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class RunnerTest {
 
@@ -72,6 +74,17 @@ public class RunnerTest {
 
             assertThat(result)
                     .isEqualTo(new Runner.RunResult(54, "Some Output", "Some Error"));
+        }
+
+        @Test
+        void tracksRanCommands() {
+            Runner runner = Runner.createNull();
+            OutputTracker<String> trackedCommands = runner.trackCommands();
+
+            runner.execute("my", "command");
+
+            assertThat(trackedCommands.single())
+                    .isEqualTo("my command");
         }
     }
 

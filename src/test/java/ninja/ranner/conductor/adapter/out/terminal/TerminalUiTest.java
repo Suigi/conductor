@@ -71,26 +71,27 @@ public class TerminalUiTest {
         @Test
         void lessRendersTextOnScreen() {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            TerminalUi tui = TerminalUi.createNull(c -> c.outputTo(outputStream)).terminalUi();
-            OutputTracker<String> trackedScreens = tui.trackScreens();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            TerminalUi tui = tuiFixture.terminalUi();
 
-            trackedScreens.clear();
-            Thread.startVirtualThread(() -> tui.less("First line\nSecond line"));
+            Thread.startVirtualThread(() -> {
+                tui.less("First line\nSecond line");
+            });
 
-            await().until(trackedScreens::hasAny);
-            assertThat(outputStream.toString())
-                    .isEqualTo("""
-                            1: First line
-                            2: Second line
-                                                      
-                                                      
-                                                      
-                                                      
-                                                       
-                                                       
-                                                       
-                            Press q to exit.\
-                            """);
+            tuiFixture.waitForScreen();
+            Awaitility.await().until(() -> outputStream.toString().equals("""
+                    1: First line
+                    2: Second line
+                                              
+                                              
+                                              
+                                              
+                                               
+                                               
+                                               
+                    Press q to exit.\
+                    """
+            ));
         }
 
         @Test

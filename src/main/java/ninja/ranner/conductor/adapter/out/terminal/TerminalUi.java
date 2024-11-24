@@ -124,7 +124,13 @@ public class TerminalUi {
         return lines;
     }
 
-    public record Fixture(TerminalUi terminalUi, Controls controls) {
+    public record Fixture(TerminalUi terminalUi, Controls controls, OutputTracker<String> trackedScreens) {
+        public void waitForScreen() {
+            trackedScreens.clear();
+            while (!trackedScreens.hasAny() || trackedScreens.last().isBlank()) {
+                Thread.yield();
+            }
+        }
     }
 
     public static class Controls {
@@ -158,12 +164,14 @@ public class TerminalUi {
             try {
                 PipedInputStream in = new PipedInputStream();
                 PipedOutputStream out = new PipedOutputStream(in);
+                TerminalUi terminalUi = new TerminalUi(new StubTerminal(
+                        in,
+                        this.outputStream),
+                        NullCompleter.INSTANCE);
                 fixture = new Fixture(
-                        new TerminalUi(new StubTerminal(
-                                in,
-                                this.outputStream),
-                                NullCompleter.INSTANCE),
-                        new Controls(out)
+                        terminalUi,
+                        new Controls(out),
+                        terminalUi.trackScreens()
                 );
             } catch (IOException e) {
                 throw new RuntimeException(e);
