@@ -9,6 +9,7 @@ import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class Root {
     private final TerminalUi terminalUi;
@@ -52,21 +53,31 @@ public class Root {
     }
 
     public Thread startInBackground() {
-        return Thread.startVirtualThread(() -> {
-            terminalUi.enterCursorAddressingMode();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Thread thread = Thread.startVirtualThread(() -> run(countDownLatch));
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return thread;
+    }
 
-            scheduler.start(this::fetchAndRenderTimer);
+    private void run(CountDownLatch countDownLatch) {
+        terminalUi.enterCursorAddressingMode();
 
-            try {
-                terminalUi.update(Lines.of("Welcome to Conductor"));
-                while (keepRunning) {
-                    readAndHandleCommand();
-                }
-            } finally {
-                scheduler.stop();
-                terminalUi.exitCursorAddressingMode();
+        scheduler.start(this::fetchAndRenderTimer);
+
+        try {
+            terminalUi.update(Lines.of("Welcome to Conductor"));
+            countDownLatch.countDown();
+            while (keepRunning) {
+                readAndHandleCommand();
             }
-        });
+        } finally {
+            scheduler.stop();
+            terminalUi.exitCursorAddressingMode();
+        }
     }
 
     private void readAndHandleCommand() {

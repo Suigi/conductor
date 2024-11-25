@@ -32,7 +32,6 @@ class RootTest {
         TerminalUi tui = TerminalUi.createNull().terminalUi();
         Root root = new Root(scheduler, tui, apiClient, "my_timer_name", Runner.createNull());
         root.startInBackground();
-        Thread.sleep(1);
 
         scheduler.simulateTick();
 
@@ -52,16 +51,16 @@ class RootTest {
         Scheduler scheduler = Scheduler.createNull();
         ConductorApiClient apiClient = ConductorApiClient.createNull(c -> c
                 .returning(remoteTimer));
-        TerminalUi tui = TerminalUi.createNull().terminalUi();
-        OutputTracker<String> trackedScreens = tui.trackScreens();
-        Root root = new Root(scheduler, tui, apiClient, null, Runner.createNull());
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        OutputTracker<String> trackedScreens = tuiFixture.trackedScreens();
+        Root root = new Root(scheduler, tuiFixture.terminalUi(), apiClient, null, Runner.createNull());
         root.startInBackground();
-        Thread.sleep(1);
 
         trackedScreens.clear();
         scheduler.simulateTick();
 
-        assertThat(trackedScreens.single())
+        tuiFixture.waitForScreen();
+        assertThat(trackedScreens.last())
                 .isEqualTo(
                         new TimerTransformer(null)
                                 .transform(remoteTimer)

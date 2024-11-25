@@ -132,10 +132,13 @@ public class TerminalUi {
 
     public record Fixture(TerminalUi terminalUi, Controls controls, OutputTracker<String> trackedScreens) {
         public void waitForScreen() {
-            trackedScreens.clear();
-            while (!trackedScreens.hasAny() || trackedScreens.last().isBlank()) {
+            while (!hasNonEmptyScreen()) {
                 Thread.yield();
             }
+        }
+
+        private boolean hasNonEmptyScreen() {
+            return trackedScreens.hasAny() && !trackedScreens().last().isBlank();
         }
     }
 
