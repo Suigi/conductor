@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RootTest {
 
     @Test
-    void onTick_fetchesRemoteTimer() throws InterruptedException {
+    void onTick_fetchesRemoteTimer() {
         Scheduler scheduler = Scheduler.createNull();
         ConductorApiClient apiClient = ConductorApiClient.createNull();
         OutputTracker<ConductorApiClient.Command> trackedCommands = apiClient.trackCommands();
@@ -41,7 +41,7 @@ class RootTest {
     }
 
     @Test
-    void onTick_rendersRemoteTimer() throws InterruptedException {
+    void onTick_rendersRemoteTimer() {
         RemoteTimer remoteTimer = new RemoteTimer(
                 "timer-name",
                 Duration.ofSeconds(55),
@@ -184,7 +184,7 @@ class RootTest {
     }
 
     @Test
-    void onStatusCommand_printsMobStatusOutputToLess() throws InterruptedException {
+    void onStatusCommand_printsMobStatusOutputToLess() {
         TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
         Runner runner = Runner.createNull(new Runner.RunResult(0, "> Mob Status Output <"));
         Root root = new Root(
