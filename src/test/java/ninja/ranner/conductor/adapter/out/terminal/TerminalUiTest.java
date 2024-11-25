@@ -77,19 +77,22 @@ public class TerminalUiTest {
             Thread.startVirtualThread(() -> tui.less("First line\nSecond line"));
 
             tuiFixture.waitForScreen();
-            Awaitility.await().until(() -> outputStream.toString().equals("""
-                    1: First line
-                    2: Second line
-                                              
-                                              
-                                              
-                                              
-                                               
-                                               
-                                               
-                    Press q to exit.\
-                    """
-            ));
+            Awaitility.await()
+                    .pollDelay(10, TimeUnit.MILLISECONDS)
+                    .atMost(100, TimeUnit.MILLISECONDS)
+                    .until(() -> outputStream.toString().contains("First line"));
+            assertThat(outputStream.toString())
+                    .isEqualTo("""
+                            1: First line
+                            2: Second line
+                                                        
+                                                        
+                                                        
+                                                        
+                                                        
+                                                        
+                                                        
+                            [Press q to exit.]""");
         }
 
         @Test

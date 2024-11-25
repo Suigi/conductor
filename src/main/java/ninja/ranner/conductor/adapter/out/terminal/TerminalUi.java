@@ -11,6 +11,8 @@ import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.terminal.impl.DumbTerminal;
+import org.jline.utils.AttributedString;
+import org.jline.utils.AttributedStyle;
 import org.jline.utils.InfoCmp;
 
 import java.io.*;
@@ -118,7 +120,7 @@ public class TerminalUi {
         var previousLines = lines;
         var previousFooter = footer;
         update(Lines.of(intro));
-        footer = "Press q to exit.";
+        footer = terminal.styledString("Press q to exit.", AttributedStyle.DEFAULT.inverse());
         update(linesWithNumbers(text.get()));
         BindingReader bindingReader = terminal.createBindingReader();
         KeyMap<String> keys = new KeyMap<>();
@@ -212,6 +214,8 @@ public class TerminalUi {
         BindingReader createBindingReader();
 
         void print(String text);
+
+        String styledString(String text, AttributedStyle style);
     }
 
     public static class WrappedTerminal implements ATerminal {
@@ -260,6 +264,11 @@ public class TerminalUi {
             this.terminal.writer().print(text);
         }
 
+        @Override
+        public String styledString(String text, AttributedStyle style) {
+            return new AttributedString(text, style).toAnsi(terminal);
+        }
+
     }
 
     private static class StubTerminal implements ATerminal {
@@ -304,6 +313,11 @@ public class TerminalUi {
         @Override
         public void print(String text) {
             printWriter.print(text);
+        }
+
+        @Override
+        public String styledString(String text, AttributedStyle style) {
+            return "[" + text + "]";
         }
 
         @Override
