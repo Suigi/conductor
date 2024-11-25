@@ -9,7 +9,6 @@
   - [X] Run mob.sh and display its output
   - [X] Add `mob start`
   - [X] Add `mob next`
-- [ ] Figure out test for where to call `draw` / wiring up the application
 - [ ] Have parameters for your own name and which remote timer to use
   - Note: Ensembler only has one active timer at any time, so we could just
     hard-code that one for starters
