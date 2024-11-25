@@ -10,6 +10,7 @@ import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class Root {
     private final TerminalUi terminalUi;
@@ -36,6 +37,16 @@ public class Root {
             Map.entry("gss", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status --short")))
     );
 
+    public static Root create(String apiBaseUrl, String timerName) throws IOException {
+        return new Root(
+                Scheduler.create(TimeUnit.SECONDS),
+                TerminalUi.create(),
+                ConductorApiClient.create(apiBaseUrl),
+                timerName,
+                Runner.create()
+        );
+    }
+
     @FunctionalInterface
     public interface CommandHandler {
         void handle(String command);
@@ -47,7 +58,7 @@ public class Root {
 
     private volatile boolean keepRunning = true;
 
-    public Root(Scheduler scheduler, TerminalUi terminalUi, ConductorApiClient apiClient, String timerName, Runner runner) {
+    Root(Scheduler scheduler, TerminalUi terminalUi, ConductorApiClient apiClient, String timerName, Runner runner) {
         this.terminalUi = terminalUi;
         this.scheduler = scheduler;
         this.apiClient = apiClient;
