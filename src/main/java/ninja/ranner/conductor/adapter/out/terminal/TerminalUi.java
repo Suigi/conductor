@@ -33,10 +33,10 @@ public class TerminalUi {
         reader = this.terminal.createReader(completer);
     }
 
-    public static TerminalUi create(List<String> completionCandidates) throws IOException {
+    public static TerminalUi create() throws IOException {
         return new TerminalUi(new WrappedTerminal(
                 TerminalBuilder.terminal()),
-                new StringsCompleter(completionCandidates)
+                new StringsCompleter()
         );
     }
 
