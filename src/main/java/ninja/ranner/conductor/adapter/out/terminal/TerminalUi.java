@@ -51,6 +51,15 @@ public class TerminalUi {
     public void enterCursorAddressingMode() {
         terminal.puts(InfoCmp.Capability.enter_ca_mode);
         terminal.flush();
+
+        // If we don't wait here, the terminal size is wrong
+        // on first render, and the prompt is not at the very
+        // bottom. I'd love to know a better way to handle this.
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void exitCursorAddressingMode() {
