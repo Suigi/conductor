@@ -17,21 +17,23 @@ public class Root {
     private final ConductorApiClient apiClient;
     private final Runner runner;
     private final String timerName;
-    private final Map<String, CommandHandler> commandHandlers = Map.of(
+    private final Map<String, CommandHandler> commandHandlers = Map.ofEntries(
             // built-in
-            "q", CommandHandler.of(this::quit),
-            "quit", CommandHandler.of(this::quit),
+            Map.entry("q", CommandHandler.of(this::quit)),
+            Map.entry("quit", CommandHandler.of(this::quit)),
             // timer controls
-            "start", CommandHandler.of(this::start),
-            "pause", CommandHandler.of(this::pause),
-            "rotate", CommandHandler.of(this::rotate),
+            Map.entry("start", CommandHandler.of(this::start)),
+            Map.entry("pause", CommandHandler.of(this::pause)),
+            Map.entry("rotate", CommandHandler.of(this::rotate)),
             // mob.sh
-            "status", CommandHandler.of(() -> runAndPrintLess("mob status")),
-            "save", CommandHandler.of(() -> runAndPrintLess("mob next")),
-            "load", CommandHandler.of(() -> runAndPrintLess("mob start")),
+            Map.entry("mob start", CommandHandler.of(() -> runAndPrintLess("mob start --include-uncommitted-changes"))),
+            Map.entry("mob done", CommandHandler.of(() -> runAndPrintLess("mob done --squash-wip"))),
+            Map.entry("mob status", CommandHandler.of(() -> runAndPrintLess("mob status"))),
+            Map.entry("save", CommandHandler.of(() -> runAndPrintLess("mob next"))),
+            Map.entry("load", CommandHandler.of(() -> runAndPrintLess("mob start"))),
             // git
-            "gs", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status")),
-            "gss", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status --short"))
+            Map.entry("gs", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status"))),
+            Map.entry("gss", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status --short")))
     );
 
     @FunctionalInterface
@@ -82,7 +84,9 @@ public class Root {
     }
 
     private void readAndHandleCommand() {
-        String command = terminalUi.readCommand();
+        String command = terminalUi.readCommand(
+                commandHandlers.keySet().stream().toList()
+        );
         CommandHandler handler = commandHandlers.get(command);
         if (handler != null) {
             handler.handle(command);
@@ -131,7 +135,7 @@ public class Root {
 
     private void runAndPrintLess(String command) {
         scheduler.stop();
-        terminalUi.less("Running command\n  " + command, () -> {
+        terminalUi.less("Running command\n  > " + command, () -> {
             Runner.RunResult result = runner.execute(command.split(" "));
             return result.stdout();
         });

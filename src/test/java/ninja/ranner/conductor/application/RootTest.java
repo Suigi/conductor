@@ -7,7 +7,6 @@ import ninja.ranner.conductor.adapter.out.process.Runner;
 import ninja.ranner.conductor.adapter.out.terminal.TerminalUi;
 import ninja.ranner.conductor.adapter.out.terminal.TimerTransformer;
 import ninja.ranner.conductor.domain.RemoteTimer;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -138,53 +137,7 @@ class RootTest {
     }
 
     @Test
-    void onMobStatusCommand_runsMobStatus() throws InterruptedException {
-        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
-        Runner runner = Runner.createNull();
-        OutputTracker<String> trackedCommands = runner.trackCommands();
-        Root root = new Root(
-                Scheduler.createNull(),
-                tuiFixture.terminalUi(),
-                ConductorApiClient.createNull(),
-                "IRRELEVANT",
-                runner
-        );
-        Thread mainThread = root.startInBackground();
-
-        tuiFixture.controls().simulateCommand("status");
-        tuiFixture.controls().simulateKey("q");
-
-        tuiFixture.controls().simulateCommand("quit");
-        mainThread.join();
-        assertThat(trackedCommands.single())
-                .isEqualTo("mob status");
-    }
-
-    @Test
-    void onGitStatusCommand_runsGitStatus() throws InterruptedException {
-        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
-        Runner runner = Runner.createNull();
-        OutputTracker<String> trackedCommands = runner.trackCommands();
-        Root root = new Root(
-                Scheduler.createNull(),
-                tuiFixture.terminalUi(),
-                ConductorApiClient.createNull(),
-                "IRRELEVANT",
-                runner
-        );
-        Thread mainThread = root.startInBackground();
-
-        tuiFixture.controls().simulateCommand("gss");
-        tuiFixture.controls().simulateKey("q");
-
-        tuiFixture.controls().simulateCommand("quit");
-        mainThread.join();
-        assertThat(trackedCommands.single())
-                .isEqualTo("git -c color.status=always status --short");
-    }
-
-    @Test
-    void onStatusCommand_printsMobStatusOutputToLess() {
+    void onRunnerCommand_printsRunnerOutputToLess() {
         TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
         Runner runner = Runner.createNull(new Runner.RunResult(0, "> Mob Status Output <"));
         Root root = new Root(
@@ -195,13 +148,66 @@ class RootTest {
                 runner
         );
         root.startInBackground();
+        assertThat(tuiFixture.trackedScreens().all())
+                .containsExactly("Welcome to Conductor\n");
+        tuiFixture.trackedScreens().clear();
+        assertThat(tuiFixture.trackedScreens().all())
+                .isEmpty();
 
-        tuiFixture.controls().simulateCommand("status");
-        tuiFixture.waitForScreen();
+        tuiFixture.controls().simulateCommand("mob status");
 
-        Awaitility.await().until(() -> tuiFixture
-                .trackedScreens()
-                .last()
-                .contains("> Mob Status Output <"));
+        tuiFixture.waitForScreenCount(2);
+        assertThat(tuiFixture.trackedScreens().all())
+                .containsExactly(
+                        """
+                        Running command
+                          > mob status
+                        """,
+                        """
+                        1: > Mob Status Output <
+                        """
+                );
+        assertThat(tuiFixture.trackedScreens().last())
+                .contains("> Mob Status Output <");
     }
+
+    @ParameterizedTest
+    @MethodSource("runnerCommands")
+    @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
+    void onRunnerCommand_runsAssociatedShellCommand(String command, String expectedRunnerCommand) throws InterruptedException {
+        TerminalUi.Fixture tuiFixture = TerminalUi.createNull();
+        Runner runner = Runner.createNull();
+        OutputTracker<String> trackedCommands = runner.trackCommands();
+        Root root = new Root(
+                Scheduler.createNull(),
+                tuiFixture.terminalUi(),
+                ConductorApiClient.createNull(),
+                "IRRELEVANT",
+                runner
+        );
+        Thread mainThread = root.startInBackground();
+
+        tuiFixture.controls().simulateCommand(command);
+        tuiFixture.controls().simulateKey("q");
+
+        tuiFixture.controls().simulateCommand("quit");
+        mainThread.join();
+        assertThat(trackedCommands.single())
+                .isEqualTo(expectedRunnerCommand);
+    }
+
+    public static Stream<Arguments> runnerCommands() {
+        return Stream.of(
+                // mob.sh
+                Arguments.of("mob start", "mob start --include-uncommitted-changes"),
+                Arguments.of("mob done", "mob done --squash-wip"),
+                Arguments.of("mob status", "mob status"),
+                Arguments.of("save", "mob next"),
+                Arguments.of("load", "mob start"),
+                // git
+                Arguments.of("gs", "git -c color.status=always status"),
+                Arguments.of("gss", "git -c color.status=always status --short")
+        );
+    }
+
 }

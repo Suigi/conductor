@@ -2,6 +2,7 @@ package ninja.ranner.conductor.adapter.out.terminal;
 
 import ninja.ranner.conductor.adapter.OutputListener;
 import ninja.ranner.conductor.adapter.OutputTracker;
+import org.jline.builtins.Completers;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
@@ -21,7 +22,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TerminalUi {
-    private final LineReader reader;
+    private LineReader reader;
     private final ATerminal terminal;
     private final OutputListener<String> screenListener = new OutputListener<>();
     private Lines lines = Lines.of();
@@ -50,6 +51,28 @@ public class TerminalUi {
         return line;
     }
 
+    public String readCommand(List<String> availableCommands) {
+        Completers.TreeCompleter treeCompleter = new Completers.TreeCompleter(availableCommands
+                .stream()
+                .map(this::commandToNode)
+                .toList());
+        reader = terminal.createReader(
+                treeCompleter
+        );
+        return readCommand();
+    }
+
+    private Completers.TreeCompleter.Node commandToNode(String c) {
+        if (c.contains(" ")) {
+            String[] split = (c.split(" "));
+            return Completers.TreeCompleter.node(
+                    split[0],
+                    Completers.TreeCompleter.node(split[1]));
+        } else {
+            return Completers.TreeCompleter.node(c);
+        }
+    }
+
     public void enterCursorAddressingMode() {
         terminal.puts(InfoCmp.Capability.enter_ca_mode);
         terminal.flush();
@@ -71,12 +94,11 @@ public class TerminalUi {
 
     public void update(Lines lines) {
         this.lines = lines;
+        screenListener.emit(lines.toString());
         render();
     }
 
     private void render() {
-        screenListener.emit(lines.toString());
-
         terminal.puts(InfoCmp.Capability.clear_screen);
 
         lines.all().forEach(terminal::println);
@@ -148,8 +170,14 @@ public class TerminalUi {
             }
         }
 
+        public void waitForScreenCount(int expectedCount) {
+            while (trackedScreens.all().count() < expectedCount) {
+                Thread.yield();
+            }
+        }
+
         private boolean hasNonEmptyScreen() {
-            return trackedScreens.hasAny() && !trackedScreens().last().isBlank();
+            return trackedScreens.hasAny() && !trackedScreens.last().isBlank();
         }
     }
 
