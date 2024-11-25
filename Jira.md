@@ -2,14 +2,13 @@
 
 ## Tasks
 
-- [ ] Add Root commands to completer
 - [X] Run mob commands
   - [X] Display any text in `less` triggered by a command
   - [X] Don't show prompt when in `less`
   - [ ] Make `less` output scrollable with j/k
   - [X] Run mob.sh and display its output
-  - [ ] Add `mob start`
-  - [ ] Add `mob next`
+  - [X] Add `mob start`
+  - [X] Add `mob next`
 - [ ] Figure out test for where to call `draw` / wiring up the application
 - [ ] Have parameters for your own name and which remote timer to use
   - Note: Ensembler only has one active timer at any time, so we could just
@@ -17,6 +16,7 @@
 
 ## Done
 
+- [X] Add Root commands to completer
 - [X] Move commands from `ConductorApplication` into `Root` and add tests
   - [X] Start/Pause/Rotate timer
 - [X] Make sure timer names in conductor-api calls are url encoded
