@@ -30,6 +30,7 @@ public class Root {
             "save", CommandHandler.of(() -> runAndPrintLess("mob next")),
             "load", CommandHandler.of(() -> runAndPrintLess("mob start")),
             // git
+            "gs", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status")),
             "gss", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status --short"))
     );
 
