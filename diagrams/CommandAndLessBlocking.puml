@@ -1,0 +1,39 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+footbox off
+skinparam ParticipantPadding 10
+skinparam BoxPadding 20
+
+box In Adapters #F1E6FF
+participant "Terminal UI" as tuiController
+box Application #FFEFE6
+participant "Root" as root
+'box Domain #F7F0D2
+'participant "UI State" as state
+box Out Adapters #DAE4F7
+participant "Runner" as runner
+participant "Scheduler" as scheduler_controls
+participant "Terminal UI" as tui
+
+group Run External Command (blocking)
+tuiController -> root: command("save")
+activate root
+root -> runner: Run `mob next`
+activate runner
+return <Command Output>
+root -> scheduler_controls: Disable tick
+activate scheduler_controls
+return
+root -> tui: Render\n<Command Output>
+activate tui
+tui -> tui: Show "less"
+tui -> tui: Bind "q" and wait
+return
+root -> scheduler_controls: Enable tick
+activate scheduler_controls
+return
+return
+end
+
+@enduml

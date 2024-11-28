@@ -5,14 +5,14 @@ footbox off
 skinparam ParticipantPadding 10
 skinparam BoxPadding 20
 
-box InAdapters #F1E6FF
+box In Adapters #F1E6FF
 participant LineReader as reader
 participant Scheduler as scheduler
 box Application #FFEFE6
 participant "main()" as main
 box Domain #F7F0D2
 participant "???" as domain
-box OutAdapters #DAE4F7
+box Out Adapters #DAE4F7
 participant "Terminal UI" as tui
 participant "Tick Controller" as tickController
 
