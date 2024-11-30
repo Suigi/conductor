@@ -20,7 +20,7 @@ You can run [mob.sh](https://mob.sh) commands from within Conductor.
 | `mob status` | Runs `mob status`                                                         |
 | `mob start`  | Runs `mob start --include-uncommitted-changes` for starting a mob session |
 | `gs`         | Shows `git status`                                                        |
-| `start`      | Shows `git status --short`                                                |
+| `gss`        | Shows `git status --short`                                                |
 
 ### "Modal" Text Output
 
