@@ -138,26 +138,34 @@ public class TerminalUi {
         less("", () -> text);
     }
 
-    public void less(String intro, Supplier<String> text) {
+    public void less(String intro, Supplier<String> textSupplier) {
         var previousLines = lines;
         var previousFooter = footer;
         update(Lines.of(intro));
         footer = terminal.styledString("Press q to exit.", AttributedStyle.DEFAULT.inverse());
-        update(linesWithNumbers(text.get()));
+        String text = textSupplier.get();
+        int position = 1;
+        update(linesWithNumbers(position, text));
         BindingReader bindingReader = terminal.createBindingReader();
         KeyMap<String> keys = new KeyMap<>();
         keys.bind("exit-less", "q");
-        while (!bindingReader.readBinding(keys).equals("exit-less")) {
-            // we want to add support for scrolling with j/k here
+        keys.bind("one-line-down", "j");
+        while (true) {
+            String binding = bindingReader.readBinding(keys);
+            if (binding.equals("one-line-down")) {
+                update(linesWithNumbers(++position, text));
+            }
+            if (binding.equals("exit-less")) break;
         }
         footer = previousFooter;
         update(previousLines);
     }
 
-    private Lines linesWithNumbers(String text) {
+    private Lines linesWithNumbers(int start, String text) {
         Lines lines = Lines.of();
         String[] split = text.split("\n");
-        for (int i = 1; i <= split.length; i++) {
+        int end = Math.min(split.length, start + terminal.getSize().getRows() - 2);
+        for (int i = start; i <= end; i++) {
             lines.append("%d: %s".formatted(i, split[i - 1]));
         }
         return lines;

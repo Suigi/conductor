@@ -68,6 +68,11 @@ public class TerminalUiTest {
                             """);
         }
 
+    }
+
+    @Nested
+    class Less {
+
         @Test
         void lessRendersTextOnScreen() {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -83,16 +88,91 @@ public class TerminalUiTest {
                     .until(() -> outputStream.toString().contains("First line"));
             assertThat(outputStream.toString())
                     .isEqualTo("""
-                            1: First line
-                            2: Second line
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                            [Press q to exit.]""");
+                               1: First line
+                               2: Second line
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                               [Press q to exit.]""");
+        }
+
+        @Test
+        void lessDisplaysTheTopOfTheContent() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            TerminalUi tui = tuiFixture.terminalUi();
+
+            Thread.startVirtualThread(() -> tui.less("""
+                                                     Line 1
+                                                     Line 2
+                                                     Line 3
+                                                     Line 4
+                                                     Line 5
+                                                     Line 6
+                                                     Line 7
+                                                     Line 8
+                                                     Line 9
+                                                     Line 10
+                                                     Line 11
+                                                     Line 12
+                                                     """));
+
+            tuiFixture.waitForScreen();
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               1: Line 1
+                               2: Line 2
+                               3: Line 3
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               """);
+        }
+
+        @Test
+        void lessBindsJToMoveDownOneLine() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            TerminalUi tui = tuiFixture.terminalUi();
+            Thread.startVirtualThread(() -> tui.less("""
+                                                     Line 1
+                                                     Line 2
+                                                     Line 3
+                                                     Line 4
+                                                     Line 5
+                                                     Line 6
+                                                     Line 7
+                                                     Line 8
+                                                     Line 9
+                                                     Line 10
+                                                     Line 11
+                                                     Line 12
+                                                     """));
+            tuiFixture.waitForScreen();
+            tuiFixture.trackedScreens().clear();
+
+            tuiFixture.controls().simulateKey("j");
+            tuiFixture.waitForScreen();
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               2: Line 2
+                               3: Line 3
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               10: Line 10
+                               """);
         }
 
         @Test
@@ -110,9 +190,9 @@ public class TerminalUiTest {
             await().until(trackedScreens::hasAny);
             assertThat(trackedScreens.last())
                     .isEqualTo("""
-                            Previous
-                            Text
-                            """);
+                               Previous
+                               Text
+                               """);
         }
 
         @Test()
@@ -128,12 +208,12 @@ public class TerminalUiTest {
             lessThread.join();
         }
 
-        private static ConditionFactory await() {
-            return Awaitility.await()
-                    .pollDelay(Duration.ofMillis(10))
-                    .atMost(Duration.ofMillis(50));
-        }
     }
 
+    private static ConditionFactory await() {
+        return Awaitility.await()
+                .pollDelay(Duration.ofMillis(10))
+                .atMost(Duration.ofMillis(50));
+    }
 
 }
