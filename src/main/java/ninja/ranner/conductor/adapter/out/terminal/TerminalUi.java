@@ -4,7 +4,6 @@ import ninja.ranner.conductor.adapter.OutputListener;
 import ninja.ranner.conductor.adapter.OutputTracker;
 import org.jline.builtins.Completers;
 import org.jline.keymap.BindingReader;
-import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
 import org.jline.reader.impl.completer.NullCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
@@ -21,7 +20,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class TerminalUi {
+public class TerminalUi implements RenderTarget {
     private LineReader reader;
     private final ATerminal terminal;
     private final OutputListener<String> screenListener = new OutputListener<>();
@@ -110,73 +109,18 @@ public class TerminalUi {
 
     public void less(String intro, Supplier<String> textSupplier) {
         var previousDisplay = this.currentDisplay();
-        var previousLines = lines;
-        var previousFooter = footer;
-        update(Lines.of(intro));
-        footer = terminal.styledString("Press q to exit.", AttributedStyle.DEFAULT.inverse());
-        String text = textSupplier.get();
-        int textRows = text.split("\n").length;
-        int position = 1;
-        update(linesWithNumbers(position, text));
-        BindingReader bindingReader = terminal.createBindingReader();
-        Less less = new Less(bindingReader);
-        String binding;
-        while (!(binding = bindingReader.readBinding(Less.keyMap())).equals(Less.EXIT)) {
-            switch (binding) {
-                case Less.LINE_DOWN -> {
-                    if (position < (textRows - terminal.getSize().getRows() + 2)) {
-                        position++;
-                    }
-                }
-                case Less.LINE_UP -> {
-                    if (position > 1) {
-                        position--;
-                    }
-                }
-                case Less.JUMP_TO_START -> position = 1;
-                case Less.JUMP_TO_END -> position = Math.max(1, textRows - terminal.getSize().getRows() + 2);
-            }
-            update(linesWithNumbers(position, text));
-        }
-        footer = previousFooter;
-        update(previousLines);
+        update(new Display(
+                Lines.of(intro),
+                terminal.styledString("Press q to exit.", AttributedStyle.DEFAULT.inverse())));
+        new Less(textSupplier.get(), terminal.createBindingReader(), this)
+                .render();
+        update(previousDisplay);
     }
 
-    private Lines linesWithNumbers(int start, String text) {
-        Lines lines = Lines.of();
-        String[] split = text.split("\n");
-        int end = Math.min(split.length, start + terminal.getSize().getRows() - 2);
-        for (int i = start; i <= end; i++) {
-            lines.append("%d: %s".formatted(i, split[i - 1]));
-        }
-        return lines;
+    @Override
+    public Size size() {
+        return terminal.getSize();
     }
-
-    static class Less {
-        private static final String EXIT = "exit-less";
-        private static final String LINE_DOWN = "one-line-down";
-        private static final String LINE_UP = "one-line-up";
-        private static final String JUMP_TO_START = "jump-to-start";
-        private static final String JUMP_TO_END = "jump-to-end";
-        private final BindingReader bindingReader;
-        private final KeyMap<String> keyMap;
-
-        public Less(BindingReader bindingReader) {
-            this.bindingReader = bindingReader;
-            this.keyMap = keyMap();
-        }
-
-        private static KeyMap<String> keyMap() {
-            KeyMap<String> keys = new KeyMap<>();
-            keys.bind(EXIT, "q");
-            keys.bind(LINE_DOWN, "j");
-            keys.bind(LINE_UP, "k");
-            keys.bind(JUMP_TO_START, "g");
-            keys.bind(JUMP_TO_END, "G");
-            return keys;
-        }
-    }
-
 
     public void update(Lines lines) {
         this.lines = lines;
