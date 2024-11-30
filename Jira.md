@@ -2,19 +2,19 @@
 
 ## Tasks
 
-- [X] Run mob commands
-  - [X] Display any text in `less` triggered by a command
-  - [X] Don't show prompt when in `less`
-  - [ ] Make `less` output scrollable with j/k
-  - [X] Run mob.sh and display its output
-  - [X] Add `mob start`
-  - [X] Add `mob next`
 - [ ] Have parameters for your own name and which remote timer to use
   - Note: Ensembler only has one active timer at any time, so we could just
     hard-code that one for starters
 
 ## Done
 
+- [X] Run mob commands
+  - [X] Display any text in `less` triggered by a command
+  - [X] Don't show prompt when in `less`
+  - [X] Make `less` output scrollable with j/k
+  - [X] Run mob.sh and display its output
+  - [X] Add `mob start`
+  - [X] Add `mob next`
 - [X] Add Root commands to completer
 - [X] Move commands from `ConductorApplication` into `Root` and add tests
   - [X] Start/Pause/Rotate timer
