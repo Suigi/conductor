@@ -144,18 +144,33 @@ public class TerminalUi {
         update(Lines.of(intro));
         footer = terminal.styledString("Press q to exit.", AttributedStyle.DEFAULT.inverse());
         String text = textSupplier.get();
+        int textRows = text.split("\n").length;
         int position = 1;
         update(linesWithNumbers(position, text));
         BindingReader bindingReader = terminal.createBindingReader();
         KeyMap<String> keys = new KeyMap<>();
         keys.bind("exit-less", "q");
         keys.bind("one-line-down", "j");
-        while (true) {
-            String binding = bindingReader.readBinding(keys);
-            if (binding.equals("one-line-down")) {
-                update(linesWithNumbers(++position, text));
+        keys.bind("one-line-up", "k");
+        keys.bind("jump-to-start", "g");
+        keys.bind("jump-to-end", "G");
+        String binding;
+        while (!(binding = bindingReader.readBinding(keys)).equals("exit-less")) {
+            switch (binding) {
+                case "one-line-down" -> {
+                    if (position < (textRows - terminal.getSize().getRows() + 2)) {
+                        position++;
+                    }
+                }
+                case "one-line-up" -> {
+                    if (position > 1) {
+                        position--;
+                    }
+                }
+                case "jump-to-start" -> position = 1;
+                case "jump-to-end" -> position = Math.max(1, textRows - terminal.getSize().getRows() + 2);
             }
-            if (binding.equals("exit-less")) break;
+            update(linesWithNumbers(position, text));
         }
         footer = previousFooter;
         update(previousLines);

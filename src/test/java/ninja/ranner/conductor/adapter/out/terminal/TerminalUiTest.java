@@ -77,11 +77,8 @@ public class TerminalUiTest {
         void lessRendersTextOnScreen() {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
-            TerminalUi tui = tuiFixture.terminalUi();
 
-            Thread.startVirtualThread(() -> tui.less("First line\nSecond line"));
-
-            tuiFixture.waitForScreen();
+            startLessAndWait(tuiFixture, "First line\nSecond line");
             Awaitility.await()
                     .pollDelay(10, TimeUnit.MILLISECONDS)
                     .atMost(100, TimeUnit.MILLISECONDS)
@@ -104,24 +101,21 @@ public class TerminalUiTest {
         void lessDisplaysTheTopOfTheContent() {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
-            TerminalUi tui = tuiFixture.terminalUi();
 
-            Thread.startVirtualThread(() -> tui.less("""
-                                                     Line 1
-                                                     Line 2
-                                                     Line 3
-                                                     Line 4
-                                                     Line 5
-                                                     Line 6
-                                                     Line 7
-                                                     Line 8
-                                                     Line 9
-                                                     Line 10
-                                                     Line 11
-                                                     Line 12
-                                                     """));
-
-            tuiFixture.waitForScreen();
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         Line 12
+                                         """);
             assertThat(tuiFixture.trackedScreens().last())
                     .isEqualTo("""
                                1: Line 1
@@ -140,26 +134,21 @@ public class TerminalUiTest {
         void lessBindsJToMoveDownOneLine() {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
-            TerminalUi tui = tuiFixture.terminalUi();
-            Thread.startVirtualThread(() -> tui.less("""
-                                                     Line 1
-                                                     Line 2
-                                                     Line 3
-                                                     Line 4
-                                                     Line 5
-                                                     Line 6
-                                                     Line 7
-                                                     Line 8
-                                                     Line 9
-                                                     Line 10
-                                                     Line 11
-                                                     Line 12
-                                                     """));
-            tuiFixture.waitForScreen();
-            tuiFixture.trackedScreens().clear();
-
-            tuiFixture.controls().simulateKey("j");
-            tuiFixture.waitForScreen();
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         Line 12
+                                         """);
+            simulateKeyAndWait(tuiFixture, "j");
 
             assertThat(tuiFixture.trackedScreens().last())
                     .isEqualTo("""
@@ -173,6 +162,222 @@ public class TerminalUiTest {
                                9: Line 9
                                10: Line 10
                                """);
+        }
+
+        @Test
+        void oneLineDownCommandCapsAtTheEndOfText() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         Line 12
+                                         """);
+
+            simulateKeyAndWait(tuiFixture, "j");
+            simulateKeyAndWait(tuiFixture, "j");
+            simulateKeyAndWait(tuiFixture, "j");
+            simulateKeyAndWait(tuiFixture, "j");
+            simulateKeyAndWait(tuiFixture, "j");
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               10: Line 10
+                               11: Line 11
+                               12: Line 12
+                               """);
+        }
+
+        @Test
+        void lessBindsKToMoveUpOneLine() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         Line 12
+                                         """);
+            simulateKeyAndWait(tuiFixture, "j");
+            simulateKeyAndWait(tuiFixture, "j");
+
+            simulateKeyAndWait(tuiFixture, "k");
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               2: Line 2
+                               3: Line 3
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               10: Line 10
+                               """);
+        }
+
+        @Test
+        void oneLineUpCommandCapsAtTheStartOfText() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         Line 12
+                                         """);
+            simulateKeyAndWait(tuiFixture, "j");
+
+            simulateKeyAndWait(tuiFixture, "k");
+            simulateKeyAndWait(tuiFixture, "k");
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               1: Line 1
+                               2: Line 2
+                               3: Line 3
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               """);
+        }
+
+        @Test
+        void bindsUppercaseGToJumpToEndOfText() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         Line 12
+                                         """);
+
+            simulateKeyAndWait(tuiFixture, "G");
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               10: Line 10
+                               11: Line 11
+                               12: Line 12
+                               """);
+        }
+
+        @Test
+        void jumpToEndCommandStaysOnTopIfTextFitsOnScreen() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         """);
+
+            simulateKeyAndWait(tuiFixture, "G");
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               1: Line 1
+                               2: Line 2
+                               3: Line 3
+                               4: Line 4
+                               """);
+        }
+
+        @Test
+        void bindsLowercaseGToJumpToStartOfText() {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            TerminalUi.Fixture tuiFixture = TerminalUi.createNull(c -> c.outputTo(outputStream));
+            startLessAndWait(tuiFixture, """
+                                         Line 1
+                                         Line 2
+                                         Line 3
+                                         Line 4
+                                         Line 5
+                                         Line 6
+                                         Line 7
+                                         Line 8
+                                         Line 9
+                                         Line 10
+                                         Line 11
+                                         """);
+            simulateKeyAndWait(tuiFixture, "j");
+
+            simulateKeyAndWait(tuiFixture, "g");
+
+            assertThat(tuiFixture.trackedScreens().last())
+                    .isEqualTo("""
+                               1: Line 1
+                               2: Line 2
+                               3: Line 3
+                               4: Line 4
+                               5: Line 5
+                               6: Line 6
+                               7: Line 7
+                               8: Line 8
+                               9: Line 9
+                               """);
+        }
+
+        private static void startLessAndWait(TerminalUi.Fixture tuiFixture, String text) {
+            Thread.startVirtualThread(() -> tuiFixture.terminalUi().less(text));
+            tuiFixture.waitForScreen();
+        }
+
+        private static void simulateKeyAndWait(TerminalUi.Fixture tuiFixture, String key) {
+            tuiFixture.trackedScreens().clear();
+            tuiFixture.controls().simulateKey(key);
+            tuiFixture.waitForScreen();
         }
 
         @Test
