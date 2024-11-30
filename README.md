@@ -19,6 +19,7 @@ You can run [mob.sh](https://mob.sh) commands from within Conductor.
 | `load`       | Runs `mob start` to load latest changes                                   |
 | `mob status` | Runs `mob status`                                                         |
 | `mob start`  | Runs `mob start --include-uncommitted-changes` for starting a mob session |
+| `mob done`   | Runs `mob done --squash-wip` for finishing the mob session                |
 | `gs`         | Shows `git status`                                                        |
 | `gss`        | Shows `git status --short`                                                |
 
