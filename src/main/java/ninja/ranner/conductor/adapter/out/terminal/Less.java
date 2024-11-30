@@ -4,39 +4,27 @@ import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Size;
 
+import java.util.Arrays;
+import java.util.function.Consumer;
+
 class Less {
     private final BindingReader bindingReader;
     private final RenderTarget target;
     private final String text;
-    private final KeyMap<String> keyMap;
     private int position = 1;
+    private boolean keepRendering = true;
 
     Less(String text, BindingReader bindingReader, RenderTarget renderTarget) {
         this.bindingReader = bindingReader;
         this.target = renderTarget;
-        this.keyMap = keyMap();
         this.text = text;
     }
 
     public void render() {
-        while (true) {
+        while (keepRendering) {
             target.update(prefixLineNumbers(position, text, target.size()));
-            Command command = readCommand();
-            if (command.equals(Command.EXIT)) {
-                break;
-            }
-
-            switch (command) {
-                case LINE_DOWN -> lineDown();
-                case LINE_UP -> lineUp();
-                case JUMP_TO_START -> position = jumpToStart();
-                case JUMP_TO_END -> jumpToEnd();
-            }
+            Command.read(bindingReader).handle(this);
         }
-    }
-
-    private Command readCommand() {
-        return Command.valueOf(bindingReader.readBinding(keyMap));
     }
 
     private void lineUp() {
@@ -51,12 +39,16 @@ class Less {
         }
     }
 
-    private int jumpToStart() {
-        return 1;
+    private void jumpToStart() {
+        position = 1;
     }
 
     private void jumpToEnd() {
         position = Math.max(1, lineCount() - target.size().getRows() + 2);
+    }
+
+    private void exit() {
+        keepRendering = false;
     }
 
     private int lineCount() {
@@ -73,22 +65,37 @@ class Less {
         return lines;
     }
 
-    public enum Command {
-        EXIT,
-        LINE_DOWN,
-        LINE_UP,
-        JUMP_TO_START,
-        JUMP_TO_END
-    }
+    private enum Command {
 
-    private static KeyMap<String> keyMap() {
-        KeyMap<String> keys = new KeyMap<>();
-        keys.bind(Command.EXIT.name(), "q");
-        keys.bind(Command.LINE_DOWN.name(), "j");
-        keys.bind(Command.LINE_UP.name(), "k");
-        keys.bind(Command.JUMP_TO_START.name(), "g");
-        keys.bind(Command.JUMP_TO_END.name(), "G");
-        return keys;
+        EXIT("q", Less::exit),
+        LINE_DOWN("j", Less::lineDown),
+        LINE_UP("k", Less::lineUp),
+        JUMP_TO_START("g", Less::jumpToStart),
+        JUMP_TO_END("G", Less::jumpToEnd);
+
+        private static final KeyMap<String> keyMap = keyMap();
+
+        private final String key;
+        private final Consumer<Less> handler;
+
+        Command(String key, Consumer<Less> handler) {
+            this.key = key;
+            this.handler = handler;
+        }
+
+        private static KeyMap<String> keyMap() {
+            KeyMap<String> keys = new KeyMap<>();
+            Arrays.stream(values()).forEach(c -> keys.bind(c.name(), c.key));
+            return keys;
+        }
+
+        private static Command read(BindingReader reader) {
+            return valueOf(reader.readBinding(keyMap));
+        }
+
+        private void handle(Less less) {
+            handler.accept(less);
+        }
     }
 
 }
