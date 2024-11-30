@@ -37,25 +37,6 @@ public class Root {
             Map.entry("gss", CommandHandler.of(() -> runAndPrintLess("git -c color.status=always status --short")))
     );
 
-    public static Root create(String apiBaseUrl, String timerName) throws IOException {
-        return new Root(
-                Scheduler.create(TimeUnit.SECONDS),
-                TerminalUi.create(),
-                ConductorApiClient.create(apiBaseUrl),
-                timerName,
-                Runner.create()
-        );
-    }
-
-    @FunctionalInterface
-    public interface CommandHandler {
-        void handle(String command);
-
-        static CommandHandler of(Runnable runnable) {
-            return ignored -> runnable.run();
-        }
-    }
-
     private volatile boolean keepRunning = true;
 
     Root(Scheduler scheduler, TerminalUi terminalUi, ConductorApiClient apiClient, String timerName, Runner runner) {
@@ -64,6 +45,16 @@ public class Root {
         this.apiClient = apiClient;
         this.timerName = timerName;
         this.runner = runner;
+    }
+
+    public static Root create(String apiBaseUrl, String timerName) throws IOException {
+        return new Root(
+                Scheduler.create(TimeUnit.SECONDS),
+                TerminalUi.create(),
+                ConductorApiClient.create(apiBaseUrl),
+                timerName,
+                Runner.create()
+        );
     }
 
     public Thread startInBackground() {
@@ -153,4 +144,12 @@ public class Root {
         scheduler.resume();
     }
 
+    @FunctionalInterface
+    public interface CommandHandler {
+        void handle(String command);
+
+        static CommandHandler of(Runnable runnable) {
+            return ignored -> runnable.run();
+        }
+    }
 }
